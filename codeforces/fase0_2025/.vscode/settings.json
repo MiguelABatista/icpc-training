@@ -1,0 +1,13 @@
+{
+	"files.associations": {
+		"iostream": "cpp",
+		"bitset": "cpp",
+		"chrono": "cpp",
+		"numbers": "cpp",
+		"random": "cpp",
+		"iosfwd": "cpp",
+		"deque": "cpp",
+		"string": "cpp",
+		"vector": "cpp"
+	}
+}
