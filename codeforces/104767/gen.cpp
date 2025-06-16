@@ -27,22 +27,10 @@ ll uniform(ll l, ll r){
 
 int main(){
     _;
-    ll n = uniform(1,15);
-    ll q = 20;
-    cout << n << " " << q << ln;
+    ll n = uniform(2,10);
+    cout << n << ln;
 
-    forn(i,0,n){
-        cout << uniform(1,20) << " ";
-        if(i != n-1){
-            cout << "+*"[uniform(0,1)] << " ";
-        }
-    }
-
-    cout << ln;
-    
-    forn(i,0,q){
-        cout << uniform(1,n) << " " << uniform(1,20) << ln;
-    }
+    forn(i,0,n) cout << uniform(1,20) << " \n"[i==n-1];
 
     return 0;
 }

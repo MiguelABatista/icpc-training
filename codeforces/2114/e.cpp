@@ -18,7 +18,26 @@ typedef vector<ll> v64;
 
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
 
+void solve(){
+    ll n; cin >> n;
+    vector<v64> g;
+    v64 vec(n);
+    forn(i,0,n) cin >> vec[i];
+
+    forn(i,0,n-1){
+        ll a, b;
+        cin >> a >> b;
+        a--; b--;
+        g[a].push_back(b);
+        g[b].push_back(a);
+    }
+
+    
+}
+
 int main(){
     _;
+    ll t; cin >> t;
+    while(t--) solve();
     return 0;
 }

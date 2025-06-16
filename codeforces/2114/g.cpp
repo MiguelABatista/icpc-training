@@ -18,7 +18,13 @@ typedef vector<ll> v64;
 
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
 
+void solve(){
+ 
+}
+
 int main(){
     _;
+    ll t; cin >> t;
+    while(t--) solve();
     return 0;
 }

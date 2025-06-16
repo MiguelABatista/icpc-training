@@ -18,7 +18,37 @@ typedef vector<ll> v64;
 
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
 
+void solve(){
+    ll n, k; cin >> n >> k;
+    string s; cin >> s;
+
+    ll cnt0 = 0;
+    ll cnt1 = 0;
+
+    forn(i,0,n){
+        if(s[i] == '0') cnt0++;
+        else cnt1++;
+    }
+
+    ll z;
+
+    z = (n-2*k)/2;
+
+    if((cnt0 - z)%2 == 1 || (cnt0 - z) < 0){
+        cout << "NO" << ln;
+        return;
+    }
+    if((cnt1 - z)%2 == 1 || (cnt1 - z) < 0){
+        cout << "NO" << ln;
+        return;
+    }
+
+    cout << "YES" << ln;
+}
+
 int main(){
     _;
+    ll t; cin >> t;
+    while(t--) solve();
     return 0;
 }
