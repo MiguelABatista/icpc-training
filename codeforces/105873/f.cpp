@@ -20,7 +20,7 @@ const ll sp = 316;
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
 
 struct part {
-    map<ll, pair<ll, v64>> mp;
+    map<ll, v64> mp;
     map<ll, v64> idxs;
     v64& v;
     ll l, r;
@@ -50,11 +50,11 @@ struct part {
             mp.erase(--mp.end());
             if (mp.find(-offset) == mp.end()) mp[-offset] = item;
             else {
-                v64& a = mp[-offset].second;
-                v64& b = item.second;
+                v64& a = mp[-offset];
+                v64& b = item;
                 if (a.size() < b.size()) swap(a, b);
                 a.insert(a.end(), b.begin(), b.end());
-                mp[-offset] = {mp[-offset].first + item.first, a};
+                mp[-offset] = a;
             }
             return;
         }
@@ -93,7 +93,7 @@ struct part {
     void destruct() {
         for (auto& [key, val] : mp) {
             ll new_val = key + offset;
-            for (auto original_val : val.second) {
+            for (auto original_val : val) {
                 for (auto idx : idxs[original_val]) {
                     v[idx] = new_val;
                 }
@@ -108,11 +108,8 @@ struct part {
         forn(i, l, r+1) {
             idxs[v[i]].push_back(i);
             auto it =  mp.find(v[i]);
-            if (it != mp.end()) {
-                it->second.first++;
-            } else {
-                mp[v[i]] = {1, {v[i]}};
-            }
+            if (it == mp.end()) mp[v[i]] = {v[i]};
+            
         }
     }
     
