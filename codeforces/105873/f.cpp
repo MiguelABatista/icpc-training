@@ -16,12 +16,13 @@ typedef vector<ll> v64;
     #define debug(x) (void)0
 #endif
 
-const ll sp = 316;
+const ll sp = 315;
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
 
 struct part {
-    map<ll, v64> mp;
-    map<ll, v64> idxs;
+    set<ll> s;
+    vector<pair<ll,ll>> mud;
+
     v64& v;
     ll l, r;
     ll offset = 0;
@@ -31,7 +32,7 @@ struct part {
     }
 
     ll mx(ll lq, ll rq) {
-        if (lq <= l && rq >= r) return mp.rbegin()->first + offset;
+        if (lq <= l && rq >= r) return *s.rbegin() + offset;
         if (rq < l || lq > r) return -INF;
         
         lq = max(l, lq);
@@ -43,19 +44,20 @@ struct part {
 
     void reset(ll lq, ll rq, ll val) {
         if (rq < l || lq > r) return;
-        auto item = mp.rbegin()->second;
-        if (mp.rbegin()->first + offset != val) return;
+        if (*s.rbegin() + offset != val) return;
 
         if (lq <= l && rq >= r) {
-            mp.erase(--mp.end());
-            if (mp.find(-offset) == mp.end()) mp[-offset] = item;
-            else {
-                v64& a = mp[-offset];
-                v64& b = item;
-                if (a.size() < b.size()) swap(a, b);
-                a.insert(a.end(), b.begin(), b.end());
-                mp[-offset] = a;
-            }
+            auto it = --s.end();
+
+            ll old_v = *it; 
+            
+            ll new_v = -offset;
+            
+            mud.emplace_back(new_v, old_v);
+
+            s.erase(it);
+            s.insert(new_v);
+
             return;
         }
         
@@ -69,7 +71,6 @@ struct part {
         }
 
         build();
-        
     }
 
     void add(ll lq, ll rq) {
@@ -91,28 +92,40 @@ struct part {
     }
 
     void destruct() {
-        for (auto& [key, val] : mp) {
-            ll new_val = key + offset;
-            for (auto original_val : val) {
-                for (auto idx : idxs[original_val]) {
-                    v[idx] = new_val;
-                }
-            }
+        map<ll, ll> to;
+
+        for(auto it = mud.rbegin(); it != mud.rend(); it++){
+            ll a = it->second;
+            ll b = it->first;
+
+            if(to.find(b) == to.end()) to[a] = b;
+            else to[a] = to[b];
+
         }
-        mp.clear();
-        idxs.clear();
+
+        forn(i,l,r+1){
+            auto it = to.find(v[i]);  
+            if(it == to.end()) {
+                v[i] = v[i] + offset;
+                continue;
+            }
+            v[i] = it->second + offset;
+        }
+
+        s.clear();
+        mud.clear();
         offset = 0;
     }
 
     void build() {
-        forn(i, l, r+1) {
-            idxs[v[i]].push_back(i);
-            auto it =  mp.find(v[i]);
-            if (it == mp.end()) mp[v[i]] = {v[i]};
-            
-        }
+        forn(i, l, r+1) s.insert(v[i]);    
     }
     
+    void print(){
+        cout << l << " " << r << " : ";
+        forn(i,l,r+1) cout << v[i] << " ";
+        cout << ln;
+    }
 };
 
 struct jogo {
@@ -134,7 +147,6 @@ struct jogo {
 
     void reset(ll lq, ll rq) {
         ll val = mx(0, (ll)v.size()-1);
-        
         for (auto& part: parts) {
             part.reset(lq, rq, val);
         }
@@ -145,6 +157,10 @@ struct jogo {
         for (auto& part: parts) {
             part.add(lq, rq);
         }
+    }
+
+    void print(){
+        for(auto p : parts) p.print();       
     }
 };
 
@@ -160,15 +176,14 @@ int main(){
         char c; cin >> c;
         ll a, b; cin >> a >> b;
         a--;b--;
-        debug("-------------");
+
         if (c == 'Q') {
             cout << game.mx(a, b) << ln;
         } else if (c == 'A') {
             game.add(a, b);
-        } else if (c == 'R') {
+        } else if (c == 'R') { 
             game.reset(a, b);
         }
-
     }
     return 0;
 }
