@@ -1,0 +1,79 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+#define fast_io cin.tie(0)->sync_with_stdio(0);
+#define endl '\n'
+typedef long long ll;
+
+const int MAX = 2e5 + 10;
+int a[MAX], b[MAX];
+int n;
+
+inline bool check() {
+    while (true) {
+        bool ok = true;
+        for (int i = 0; i < n; i++) if (b[i]) {
+            ok = false;
+            break;
+        }
+        if (ok) return true;
+
+        for (int i = 0; i + 1 < n; i++) {
+            if (b[i] & 1) {
+                b[i]--;
+                b[i + 1] -= 2;
+            }
+            if (b[i] < 0) return false;
+        }
+        if (b[n - 1] & 1) {
+            b[n - 1]--;
+            b[0] -= 2;
+        }
+        if (b[n - 1] < 0) return false;
+        if (b[0] < 0) return false;
+
+        for (int i = 0; i < n; i++) b[i] >>= 1;
+    }
+
+    assert(false);
+}
+
+void test_case() {
+    cin >> n;
+    int mx = 2e9, sum = 0;
+    for (int i = 0; i < n; i++) {
+        cin >> a[i];
+        sum = (sum + a[i]) % 3;
+        mx = min(mx, a[i]);
+    }
+    mx = mx / 3 + 2;
+
+    int ans = 0;
+
+    for (int mod = 0; mod < 3; mod++) {
+        if ((mod * n) % 3 != sum) continue;
+        int lo = -1, hi = mx;
+        while (lo < hi) {
+        int mid = (lo + hi + 1) / 2;
+
+        int val = 3 * mid + mod;
+        for (int i = 0; i < n; i++) b[i] = a[i] - val;
+
+        if (check())
+            lo = mid;
+        else
+            hi = mid - 1;
+        }
+        ans = max(ans, 3 * lo + mod);
+    }
+
+    cout << ans << endl;
+}
+
+int32_t main() {
+  fast_io;
+
+  int t; cin >> t;
+  while (t--)
+    test_case();
+}
