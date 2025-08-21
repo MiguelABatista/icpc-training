@@ -35,7 +35,7 @@ struct Line {
 	bool operator<(ll x) const { return p < x; }
 };
 
-struct dynamic_hull : multiset<Line, less<>> {
+struct CHT : multiset<Line, less<>> {
 	ll div(ll a, ll b) { 
 		return a / b - ((a ^ b) < 0 and a % b);
 	}
@@ -54,6 +54,8 @@ struct dynamic_hull : multiset<Line, less<>> {
 	}
 		
 	void add(ll a, ll b) {
+        a = -a;
+        b = -b;
 		auto x = insert({a, b, 0});
 		while (overlap(x)) erase(next(x)), update(x);
 		if (x != begin() and !overlap(prev(x))) x = prev(x), update(x);
@@ -65,30 +67,29 @@ struct dynamic_hull : multiset<Line, less<>> {
 		assert(!empty());
 		auto l = *lower_bound(x);
 #warning cuidado com overflow!
-		return l.a * x + l.b;
+		return -(l.a * x + l.b);
 	}
 };
 
+
 int main(){
     _;
-	ll n;
-	cin >> n;
-	v64 a(n), b(n);
-	forn(i,0,n) cin >> a[i];
-	forn(i,0,n) cin >> b[i];
+    ll n; ll c;
+    cin >> n >> c;
 
-	dynamic_hull cht;
+    v64 vec(n);
+    for(ll& x: vec) cin >> x;
 
-	v64 dp(n, INF);
+    v64 dp(n, INF);
+    CHT cht;
+    cht.add(0,0);
 
-	dp[0] = 0;
+    forn(i,0,n){
+        cht.add(-2*vec[i], vec[i]*vec[i] + (i == 0 ? 0 : dp[i-1]));
+        dp[i] = cht.query(vec[i]) + c + vec[i]*vec[i];
+    }
 
-	forn(i,1,n){
-		cht.add(-1*b[i-1], -1*dp[i-1]);
-		dp[i] = -1*cht.query(a[i]);
-	}
-
-	// forn(i,0,n) cout << dp[i] << " ";; cout << ln;
-	cout << dp[n-1] << ln;
+    // forn(i,0,n) cout << dp[i] << ln;; cout << ln;
+    cout << dp[n-1] << ln;
     return 0;
 }

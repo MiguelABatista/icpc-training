@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-typedef long long ll;
+typedef __int128_t ll;
 typedef pair<ll, ll> p64; 
 typedef vector<ll> v64;
 
@@ -71,24 +71,30 @@ struct dynamic_hull : multiset<Line, less<>> {
 
 int main(){
     _;
-	ll n;
-	cin >> n;
-	v64 a(n), b(n);
-	forn(i,0,n) cin >> a[i];
-	forn(i,0,n) cin >> b[i];
+    int64_t n;
+    cin >> n;
+    vector<pair<p64, ll>> vec(n);
+    
+    forn(i,0,n){
+        int a,b,c;
+        cin >> a >> b >> c;
+        vec[i] = {{a,b}, c};
+    }
+    sort(vec.begin(), vec.end());
 
-	dynamic_hull cht;
+    dynamic_hull cht;
+    v64 dp(n,-INF);
+    dp[0] = vec[0].first.first*vec[0].first.second - vec[0].second;
+    cht.add(-vec[0].first.first, dp[0]);
+    ll ans = dp[0];
 
-	v64 dp(n, INF);
+    forn(i,1,n){
+        ll score = vec[i].first.first*vec[i].first.second - vec[i].second;
+        dp[i] = cht.query(vec[i].first.second) + score;
+        ans = max(ans, dp[i]);
+        cht.add(-vec[i].first.first, dp[i]);
+    }
 
-	dp[0] = 0;
-
-	forn(i,1,n){
-		cht.add(-1*b[i-1], -1*dp[i-1]);
-		dp[i] = -1*cht.query(a[i]);
-	}
-
-	// forn(i,0,n) cout << dp[i] << " ";; cout << ln;
-	cout << dp[n-1] << ln;
+    cout << (int64_t)ans << ln;
     return 0;
 }

@@ -73,22 +73,34 @@ int main(){
     _;
 	ll n;
 	cin >> n;
-	v64 a(n), b(n);
-	forn(i,0,n) cin >> a[i];
-	forn(i,0,n) cin >> b[i];
+	v64 s(n+1), r(n+1);
+	forn(i,1,n+1) cin >> s[i], r[i] = s[i]*i;
+
+    v64 pref_s(n+1);
+    v64 pref_r(n+1);
+
+    pref_r[0] = 0;
+    pref_s[0] = 0;
+
+    forn(i,1,n+1){
+        pref_r[i] = pref_r[i-1] + r[i];
+        pref_s[i] = pref_s[i-1] + s[i];
+    }
 
 	dynamic_hull cht;
 
-	v64 dp(n, INF);
+	v64 dp(n+1, -INF);
+    ll ans = 0;    
 
-	dp[0] = 0;
+    cht.add(0,0);
+    for (int i = 1; i <= n; ++i) {
+        ll best = -cht.query(pref_s[i]);          // use hull first
+        ans = max(ans, pref_r[i] - best);         // update answer
+        dp[i] = ans;
+        cht.add(-i, -(pref_r[i] - i * pref_s[i])); // now insert j = i
+    }
 
-	forn(i,1,n){
-		cht.add(-1*b[i-1], -1*dp[i-1]);
-		dp[i] = -1*cht.query(a[i]);
-	}
-
-	// forn(i,0,n) cout << dp[i] << " ";; cout << ln;
-	cout << dp[n-1] << ln;
+	// forn(i,1,n+1) cout << dp[i] << " ";; cout << ln;
+	cout << ans << ln;
     return 0;
 }

@@ -69,26 +69,37 @@ struct dynamic_hull : multiset<Line, less<>> {
 	}
 };
 
+
 int main(){
     _;
-	ll n;
-	cin >> n;
-	v64 a(n), b(n);
-	forn(i,0,n) cin >> a[i];
-	forn(i,0,n) cin >> b[i];
+    ll n; cin >> n;
+    v64 vec(n+1);
+    v64 pref(n+1);
+    forn(i,1,n+1) cin >> vec[i];
 
-	dynamic_hull cht;
+    dynamic_hull cht;
+    dynamic_hull cht2;
+    ll tot = 0;
+    forn(i,1,n+1){
+        pref[i] = pref[i-1] + vec[i];
+        tot += vec[i]*i;
+        cht.add(i, -1*pref[i]);
+        cht2.add(i, -1*pref[i-1]);
+    }
 
-	v64 dp(n, INF);
+    ll ans = tot;
+    forn(i,1,n+1){        
+        ll delta = pref[i] - i * vec[i];
+        ll temp = cht.query(vec[i]);
+        delta += cht.query(vec[i]);
 
-	dp[0] = 0;
+        ans = max(ans, tot+delta);
 
-	forn(i,1,n){
-		cht.add(-1*b[i-1], -1*dp[i-1]);
-		dp[i] = -1*cht.query(a[i]);
-	}
-
-	// forn(i,0,n) cout << dp[i] << " ";; cout << ln;
-	cout << dp[n-1] << ln;
+        ll delta2 = pref[i-1] - vec[i]*i;
+        delta2 += cht2.query(vec[i]);
+        ans = max(ans, tot+delta2);
+    }
+    
+    cout << ans << ln;
     return 0;
 }

@@ -1,0 +1,86 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+#define fast_io cin.tie(0)->sync_with_stdio(0);
+#define endl '\n'
+typedef long long ll;
+
+const int mod = (119<<23)+1;
+
+int dp[16][(1<<16)][102], tr[16][2];
+ll tot[1<<16][102];
+
+bool pode[1<<16];
+
+int32_t main() {
+    fast_io;
+    int n, m, k; cin >> n >> m >> k;
+
+    if (n == k and m == k) {
+        cout << 1 << endl;
+        return 0;
+    }
+
+    int wmask = 0, ts = (1 << (k+1));
+
+    string w; cin >> w;
+
+    for (int i = 0; i < k; ++i) if (w[i] == '1') wmask += (1 << i);
+
+    for (int i = 0; i < (1 << (k+1)); ++i) for (int j = 0; j < 2; ++j) tr[i][j] = i / 2 + (j << k);
+
+    for (int i = k+1; i <= max(n, m)+1; ++i) {
+        for (int suf = 0; suf < ts; ++suf) {
+            for (int foi = 1; foi < (1 << ts); ++foi) {
+            
+                if (((1 << suf) & foi) == 0) continue;
+                
+                if (i == k+1) {
+                    if ((1 << suf) == foi) dp[suf][foi][i] = 1;
+                    continue;
+                }
+
+                if (i == m+1 or i == n+1) {
+                    tot[foi][i-1] += dp[suf][foi][i-1];
+                    if (tot[foi][i-1] >= mod) tot[foi][i-1] -= mod;
+                }
+
+                // vou usar esse bicho pra mandar pro proximo
+                auto& dp1 = dp[tr[suf][0]][foi|(1<<tr[suf][0])][i];
+                auto& dp2 = dp[tr[suf][1]][foi|(1<<tr[suf][1])][i];
+                dp1 += dp[suf][foi][i-1];
+                dp2 += dp[suf][foi][i-1];
+                if (dp1 >= mod) dp1 -= mod;
+                if (dp2 >= mod) dp2 -= mod;
+            }
+        }
+    }
+    
+    pode[1<<wmask] = pode[1<<(wmask+(1<<k))] = 1;
+    pode[1<<(2*wmask)] = pode[1<<(2*wmask+1)] = 1;
+    ll ans = 0;
+    if (n == k or m == k) {
+        for (int i = 1; i < 1 << ts; ++i) {
+            for (int j = 0; j < 16; ++j) {
+                if (i >> j & 1) pode[i] |= pode[i-(1<<j)];
+            }
+            if (!pode[i]) continue;
+            ans = (ans + tot[i][max(n,m)]) % mod;
+        }
+        cout << ans << endl;
+        return 0;
+    }
+    for (int M = 1; M < (1 << ts); ++M) {
+        for (int j = 0; j < 16; ++j) {
+            if (M >> j & 1) pode[M] |= pode[M-(1<<j)];
+        }
+        for (int sub = M&(M-1); sub; sub = (sub-1)&M) {
+            int other = M^sub;
+            if (pode[sub] and pode[other]) {
+                ans = (ans + tot[sub][n] * tot[other][m]) % mod;
+            }
+        }
+    }
+    cout << endl;
+    cout << ans << endl;
+    }
