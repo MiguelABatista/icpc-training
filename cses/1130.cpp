@@ -19,21 +19,28 @@ typedef vector<ll> v64;
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
 
 vector<v64> g;
-v64 dp;
+v64 cor;
+ll resp = 0;
 
-void dfs(ll u, ll p){
-    ll resp = 0;
+ll dfs(ll u, ll p){
+    bool has_zero = false;
 
     for(ll v : g[u]){
         if(v == p) continue;
-        
+        ll temp = dfs(v,u);
+        if(temp == 0) has_zero = true;
+    }   
+
+    if(has_zero){
+        resp++;
+        return 1;
     }
+    return 0;
 }
 
 int main(){
     ll n; cin >> n;
     g.resize(n);
-    dp.resize(n,-1);
 
     forn(i,1,n){
         ll a, b;
@@ -43,9 +50,9 @@ int main(){
         g[b].push_back(a);
     }
 
-    dfs(0, -1);
+    ll temp = dfs(0, -1);
 
-    forn(i,0,n) cout << sub[i] << " \n"[i==n-1];
+    cout << resp << ln;
     return 0;
 
 }
