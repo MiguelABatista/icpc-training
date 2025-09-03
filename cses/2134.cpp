@@ -23,22 +23,13 @@ typedef vector<ll> v64;
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
 const ll MAX = 100;
 
-/**
- * Author: Benjamin Qi, Oleksandr Kulkov, chilli
- * Date: 2020-01-12
- * License: CC0
- * Source: https://codeforces.com/blog/entry/53170, https://github.com/bqi343/USACO/blob/master/Implementations/content/graphs%20(12)/Trees%20(10)/HLD%20(10.3).h
- * Description: Decomposes a tree into vertex disjoint heavy paths and light
- * edges such that the path from any leaf to the root contains at most log(n)
- * light edges. Code does additive modifications and max queries, but can
- * support commutative segtree modifications/queries on paths and subtrees.
- * Takes as input the full adjacency list. VALS\_EDGES being true means that
- * values are stored in the edges, as opposed to the nodes. All values
- * initialized to the segtree default. Root must be 0.
- * Time: O((\log N)^2)
- * Status: stress-tested against old HLD
- */
-
+// Heavy Light Decomposition (Path query + Path update)
+//
+// Decomposes a tree into vertex disjoint heavy paths and light edges such that 
+// the path from any leaf to the root contains at most log(n) light edges.
+// All values initialized to the segtree default. Root must be 0.
+//
+// complexity: O((log N)^2) per op,
 
 // Segment Tree (Range Query + Point Update)
 //
@@ -67,12 +58,12 @@ struct node {
     ll val = 0;
     
     static node comb(const node& a, const node& b) {
-        return {a.val + b.val};
+        return {max(a.val, b.val)};
     }
 
     void resolve(const lazy& lz, ll l, ll r) {
-        if (lz.set.has_value()) val = *lz.set * (r-l+1);
-        if (lz.add) val += lz.add * (r-l+1);
+        if (lz.set.has_value()) val = *lz.set;
+        if (lz.add) val += lz.add;
     }
 };
 
@@ -135,9 +126,11 @@ template <bool VALS_EDGES> struct HLD {
 	v64 parent, sz, head, pos;
     vector<node> vseg;
 	std::unique_ptr<tree> seg;
-	HLD(vector<v64> adj_)
+	HLD(vector<v64> adj_, v64 vals)
 		: N(adj_.size()), adj(adj_), parent(N, -1), sz(N, 1),
-		  head(N),pos(N),vseg(N, {0}), seg(make_unique<tree>(0, N-1, vseg)){ dfsSz(0); dfsHld(0); }
+		  head(N),pos(N),vseg(N, {0}){ dfsSz(0); dfsHld(0);
+            seg = make_unique<tree>(0, N-1, vseg);
+        }
 	void dfsSz(ll v) { // get heavy son
 		for (ll& u : adj[v]) {
 			adj[u].erase(find(adj[u].begin(), adj[u].end(), v));
@@ -169,14 +162,14 @@ template <bool VALS_EDGES> struct HLD {
         });
 	}
 	ll queryPath(ll u, ll v) { // Modify depending on problem
-		ll res = 0;
+		ll res = -INF;
 		process(u, v, [&](ll l, ll r) {
-				res += seg->query(l, r).val;
+				res = max(res, seg->query(l, r).val);
 		});
 		return res;
 	}
 	ll querySubtree(ll v) { // modifySubtree is similar
-		return seg->query(pos[v] + VALS_EDGES, pos[v] + sz[v]).val;
+		return seg->query(pos[v] + VALS_EDGES, pos[v] + sz[v] - 1).val;
 	}
 };
 
@@ -198,7 +191,7 @@ int main(){
         g[b].push_back(a);
     }  
 
-    HLD<false> hld(g);
+    HLD<false> hld(g, vals);
     
     forn(i,0,n){
         hld.modifyPath(i,i, vals[i]);
@@ -212,11 +205,11 @@ int main(){
             s--;
             hld.modifyPath(s, s, x);
         }else{
-            ll s; cin >> s;
-            s--;
-            cout << hld.queryPath(s,0) << ln;
+            ll a, b; cin >> a >> b;
+            a--; b--;
+            cout << hld.queryPath(a,b) << " ";
         }
     }
-
+    cout << ln;
     return 0;
 } 

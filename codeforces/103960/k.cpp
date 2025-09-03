@@ -22,24 +22,51 @@ typedef vector<ll> v64;
 
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
 const ll MOD = 1'000'000'000;
+const ll DEG = 401;
 
 // Matriz
 
-#define MODULAR true
+struct pol{
+	v64 coef = v64(DEG, 0);
+
+	pol(){}
+	pol(ll val){coef[0] = val;}
+
+	pol operator*(const pol& r) {
+		pol novo;
+		forn(i,0,DEG){
+			forn(j,0,DEG-i){
+				novo.coef[i+j] = (novo.coef[i+j] + coef[i]*r.coef[j])%MOD;
+			}
+		}
+		return novo;
+	}
+	pol operator+(const pol& r) {
+		pol novo;
+		forn(i,0,DEG){
+			novo.coef[i] = (novo.coef[i] + coef[i] + r.coef[i])%MOD;
+		}
+		return novo;
+	}
+	void print(){ cout << "( "; forn(i,0,DEG){cout << coef[i] << " "; } cout << " )" ;}
+};
+
+#define MODULAR false
 template<typename T> struct matrix : vector<vector<T>> {
 	ll n, m;
+
 	void print() {
 		forn(i,0,n) {
-			forn(j,0,m) cout << (*this)[i][j] << " ";
-			cout << endl;
+			forn(j,0,m) {(*this)[i][j].print(); cout << " ";}
+			cout << ln;
 		}
 	}
 
 	matrix(ll n_, ll m_, bool ident = false) :
-			vector<vector<T>>(n_, vector<T>(m_, 0)), n(n_), m(m_) {
+			vector<vector<T>>(n_, vector<T>(m_)), n(n_), m(m_) {
 		if (ident) {
 			assert(n == m);
-			forn(i,0,n) (*this)[i][i] = 1;
+			forn(i,0,n) (*this)[i][i] = pol(1);
 		}
 	}
 	matrix(const vector<vector<T>>& c) : vector<vector<T>>(c),
@@ -60,7 +87,7 @@ template<typename T> struct matrix : vector<vector<T>> {
             M[i][j] += add%MOD;
             if (M[i][j] >= MOD) M[i][j] -= MOD;
 #else
-            M[i][j] += add;
+            M[i][j] = M[i][j] + add;
 #endif
         }
 		return M;
@@ -88,24 +115,26 @@ template<typename T> struct matrix : vector<vector<T>> {
 int main(){
     _;
     ll n, m ,k; cin >> n >> m >> k;
-    vector<v64> a(10, v64(400, 0));
-    forn(i,0,m){
-        ll d, p;
+	
+	matrix<pol> mat(10, 10);
+
+
+    forn(i,0,9){
+        mat[i+1][i].coef[0]++;
+    }
+
+	
+	forn(i,0,m){
+		ll d, p;
         cin >> d >> p;
-        a[d][p]++;
+		d--;
+        mat[0][d].coef[p]++;
     }
-
-    matrix<ll> mat(10*400, 10*400);
-
-    forn(i,0,10){
-        forn(j,0,400){
-            mat[i+j*10][i+j*10] = a[i][j];
-        }
-    }
-
-    debug(1);
-    auto resp = mat^n;
-    debug(1);
-    cout << resp[0+10*k][0+10*k] << ln;
+	
+    auto resp = mat^(n-1);
+	ll ans = 0;
+	// resp.print();
+	forn(i,0,k+1) ans = (ans+resp[0][0].coef[i])%MOD; 
+	cout << ans << ln;
     return 0;
 }

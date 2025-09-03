@@ -176,7 +176,7 @@ template <bool VALS_EDGES> struct HLD {
 		return res;
 	}
 	ll querySubtree(ll v) { // modifySubtree is similar
-		return seg->query(pos[v] + VALS_EDGES, pos[v] + sz[v]).val;
+		return seg->query(pos[v] + VALS_EDGES, pos[v] + sz[v] - 1).val;
 	}
 };
 
@@ -214,7 +214,7 @@ int main(){
         }else{
             ll s; cin >> s;
             s--;
-            cout << hld.queryPath(s,0) << ln;
+            cout << hld.querySubtree(s) << ln;
         }
     }
 
