@@ -19,42 +19,43 @@ typedef vector<ll> v64;
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
 const ll pot2 = 1'048'576; // 2^20
 
-// soma de subconjunto
-v64 sos_dp_sub(v64 f) {
-	ll n = __builtin_ctzll((ll)f.size());
-	assert((1ll<<n) == (ll)f.size());
-
-    forn(i,0,n) forn(mask, 0, (1<<n))
-		if (mask>>i&1) f[mask] += f[mask^(1<<i)];
-	return f;
-}
-
-// soma de super-conjunto
-v64 sos_dp_super(v64 f) {
-	ll n = __builtin_ctzll((ll)f.size());
-	assert((1ll<<n) == (ll)f.size());
-
-    forn(i,0,n) forn(mask, 0, (1<<n))    
-		if (~mask>>i&1) f[mask] += f[mask^(1<<i)];
-	return f;
-}
 
 int main(){
     _;
     ll n; cin >> n;
     v64 vec(n);
     v64 freq(pot2, 0);
+    v64 dp(pot2, 0);
+    v64 dp2(pot2, 0);
 
     forn(i,0,n){
         cin >> vec[i];
         freq[vec[i]]++;
     }
 
-    v64 dp_sub = sos_dp_sub(freq);    
-    v64 dp_super = sos_dp_super(freq);    
+    forn(mask,0,pot2) dp[mask] = freq[mask]; 
+
+    forn(i,0,20){
+        forn(mask,0,pot2){
+            if(mask & (1<<i)){
+                dp[mask] += dp[mask^(1<<i)]; 
+            }
+        }
+    }
+
+    
+    forn(mask,0,pot2) dp2[mask] = freq[mask]; 
+
+    forn(i,0,20){
+        forn(mask,0,pot2){
+            if(!(mask & (1<<i))){
+                dp2[mask] += dp2[mask^(1<<i)]; 
+            }
+        }
+    }
     
     forn(i,0,n){
-        cout << dp_sub[vec[i]] << " " << dp_super[vec[i]] << " " << n-dp_sub[(pot2-1)^vec[i]] <<ln;
+        cout << dp[vec[i]] << " " << dp2[vec[i]] << " " << n-dp[(pot2-1)^vec[i]] <<ln;
     }
 
     return 0;
