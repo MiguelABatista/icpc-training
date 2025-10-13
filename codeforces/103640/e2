@@ -1,0 +1,121 @@
+# pragma GCC optimize ("O3")
+# pragma GCC optimize ("Ofast")
+# pragma GCC optimize ("unroll-loops")
+#include <bits/stdc++.h>
+using namespace std;
+
+int n;
+long long dp[3005][3005][2];
+long long s[3005];
+long long ps[3005];
+long long d[3005];
+long long f[3005];
+const long long INF=1e18;
+
+void solve(int ll,int rr,int optl,int optr,int dd,int type) {
+    if (ll>rr) {
+        return;
+    }
+    int mid=(ll+rr)/2;
+    int l=mid;
+    int r=mid+dd;
+    int xl=max(optl,l+1);
+    int xr=min(optr,r);
+    long long mn=INF;
+    int pos=-1;
+    for(int i=xl;i<=xr;i++) {
+        long long val;
+        if (type==0) {
+            val=ps[i]-ps[l]+d[i]+max(dp[l][i-1][1],dp[i][r][0]);
+        }
+        else {
+            val=ps[r+1]-ps[i]+d[i]+max(dp[l][i-1][1],dp[i][r][0]);
+        }
+        if (val<mn) {
+            pos=i;
+            mn=val;
+        }
+    }
+    assert(pos!=-1);
+    dp[l][r][type]=mn;
+    solve(ll,mid-1,optl,pos,dd,type);
+    solve(mid+1,rr,pos,optr,dd,type);
+}
+
+const int sz=4096;
+
+struct Seg {
+    long long seg[sz*2];
+    long long sum(int l,int r,int node=1,int nodel=0,int noder=sz-1) {
+        if (r<nodel||l>noder) {
+            return INF;
+        }
+        if (l<=nodel&&noder<=r) {
+            return seg[node];
+        }
+        int mid=(nodel+noder)/2;
+        return min(sum(l,r,node*2,nodel,mid),sum(l,r,node*2+1,mid+1,noder));
+    }
+    void upd(int i,long long val) {
+        i+=sz;
+        seg[i]=val;
+        while (i>1) {
+            i/=2;
+            seg[i]=min(seg[i*2],seg[i*2+1]);
+        }
+    }
+};
+
+Seg segl[3005][2];
+Seg segr[3005][2];
+
+int main() {
+    scanf("%d",&n);
+    for(int i=2;i<=n;i++) {
+        scanf("%lld",&s[i]);
+        ps[i]=ps[i-1]+s[i];
+    }
+    ps[n+1]=ps[n];
+    for(int i=1;i<=n;i++) {
+        scanf("%lld",&d[i]);
+    }
+    for(int i=0;i<=n;i++) {
+        scanf("%lld",&f[i]);
+    }
+    for(int i=0;i<=n;i++) {
+        dp[i][i][0]=f[i];
+        dp[i][i][1]=f[i];
+    }
+    for(int l=0;l<=n;l++) {
+        int r=l;
+        segl[l][0].upd(r+1,dp[l][r][1]+ps[r+1]+d[r+1]);
+        segr[r][0].upd(l,dp[l][r][0]+ps[l]+d[l]);
+        segl[l][1].upd(r+1,dp[l][r][1]-ps[r+1]+d[r+1]);
+        segr[r][1].upd(l,dp[l][r][0]-ps[l]+d[l]);
+    }
+    for(int l=n;l>=0;l--) {
+        for(int r=l+1;r<=n;r++) {
+            int lo=l;
+            int hi=r+1;
+            while (lo+1<hi) {
+                int mid=(lo+hi)/2;
+                if (dp[l][mid-1][1]<=dp[mid][r][0]) {
+                    lo=mid;
+                }
+                else {
+                    hi=mid;
+                }
+            }
+            for(int k=0;k<2;k++) {
+                long long val=segr[r][k].sum(l+1,lo)+(k==0?-ps[l]:ps[r+1]);
+                val=min(val,segl[l][k].sum(hi,r)+(k==0?-ps[l]:ps[r+1]));
+                dp[l][r][k]=val;
+            }
+            segl[l][0].upd(r+1,dp[l][r][1]+ps[r+1]+d[r+1]);
+            segr[r][0].upd(l,dp[l][r][0]+ps[l]+d[l]);
+            segl[l][1].upd(r+1,dp[l][r][1]-ps[r+1]+d[r+1]);
+            segr[r][1].upd(l,dp[l][r][0]-ps[l]+d[l]);
+        }
+    }
+    printf("%lld",dp[0][n][0]);
+}
