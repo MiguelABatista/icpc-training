@@ -22,51 +22,61 @@ void init() {
     }
 }
 
-int dfs_centroids(int node, int parent, const Tree &tree, const vector<bool> &valid, int N, array<int, 2> &ans) {
-    int my_sz = 1;
-    bool centroid = true;
-    for (int c : tree[node]) if (c != parent && valid[c]) {
-        const int sz_c = dfs_centroids(c, node, tree, valid, N, ans);
-        if (sz_c > N / 2) centroid = false;
-        my_sz += sz_c;
-    }
-    if (N - my_sz > N / 2) centroid = false;
-    if (centroid) {
-        if (ans[0] == -1) ans[0] = node;
-        else ans[1] = node;
-    }
-    return my_sz;
-}
-
 array<int, 2> find_centroids(const Tree &tree, int node, const vector<bool> &valid, int N) {
     array<int, 2> ans{-1, -1};
-    dfs_centroids(node, -1, tree, valid, N, ans);
+    function<int(int, int)> dfs = [&, N](int node, int parent) -> int {
+        int my_sz = 1;
+        bool centroid = true;
+        for (int c : tree[node]) if (c != parent && valid[c]) {
+            const int sz_c = dfs(c, node);
+            if (sz_c > N / 2) centroid = false;
+            my_sz += sz_c;
+        }
+        if (N - my_sz > N / 2) centroid = false;
+        if (centroid) {
+            if (ans[0] == -1) ans[0] = node;
+            else ans[1] = node;
+        }
+        return my_sz;
+    };
+    dfs(node, -1);
     return ans;
 }
 
-ll hash_rooted(const Tree &tree, int root, const vector<bool> &valid) {
+ll hashes[MAX_DIV];
+int sizes[MAX_DIV];
+ll hash_rooted(Tree &tree, int root, const vector<bool> &valid) {
     // write tree as (()((()))) and interpret '(' as 0, and ')' as 1.
     // Sort children by hash.
     //
     // The return is a pair (hash, num_nodes)
-    function<pair<ll, ll>(int, int)> dfs = [&](int node, int parent) -> pair<ll, ll> {
-        vector<pair<ll, ll>> children;
+    function<void(int, int)> dfs = [&](int node, int parent) {
         for (int c : tree[node]) if (c != parent && valid[c])
-            children.push_back(dfs(c, node));
-        sort(begin(children), end(children)); // sort by hash
+            dfs(c, node);
+        sort(begin(tree[node]), end(tree[node]), [&valid, parent](int a, int b) {
+            bool valid_a = valid[a] && a != parent;
+            bool valid_b = valid[b] && b != parent;
+
+            if (!valid_a) return false;
+            if (!valid_b) return true;
+
+            return hashes[a] < hashes[b];
+        }); // sort by hash
         // build final hash and size
-        ll sz = 0;
+        int sz = 0;
         ll hash = 0;
-        for (auto [h, s] : children) {
-            hash = (hash + h * pow2[2 * sz]) % MOD;
-            sz += s;
+        for (int c : tree[node]) if (c != parent && valid[c]) {
+            hash = (hash + hashes[c] * pow2[2 * sz]) % MOD;
+            sz += sizes[c];
         }
-        return {((hash << 1) | 1) % MOD, sz + 1}; // add node
+        hashes[node] = ((hash << 1) | 1) % MOD;
+        sizes[node] = sz + 1;
     };
-    return dfs(root, -1).first;
+    dfs(root, -1);
+    return hashes[root];
 }
 
-ll hash_tree(const Tree &tree, int node, const vector<bool> &valid, int N) {
+ll hash_tree(Tree &tree, int node, const vector<bool> &valid, int N) {
     // The tree we are hashing is a subtree of "tree" containing node, but never passing
     // through an invalid node.
     //
@@ -79,7 +89,7 @@ ll hash_tree(const Tree &tree, int node, const vector<bool> &valid, int N) {
     return h;
 }
 
-ll hash_divisors(const Tree &tree, const int div, vector<bool> &valid) {
+ll hash_divisors(Tree &tree, const int div, vector<bool> &valid) {
     fill(begin(valid), end(valid), true);
 
     int h = -1;
@@ -127,10 +137,12 @@ int main() {
     int N;
     scanf("%d", &N);
     vector<Tree> trees(N);
+    vector<bool> sz_present(200001, false);
     for (int i = 0; i < N; i++) {
         int K;
         scanf("%d", &K);
         trees[i].resize(K);
+        sz_present[K] = true;
         while (--K) {
             int a, b;
             scanf("%d %d", &a, &b); a--; b--;
@@ -152,7 +164,7 @@ int main() {
         // first for the full tree
         int ans = cnt_hash[hash_tree(tree, 0, valid, N)] - 1; // - 1 because can't count tree itself
         // now for all proper divisors (except for 1, because there are no trees of size 1)
-        for (int d : divisors[N]) {
+        for (int d : divisors[N]) if (sz_present[d]) {
             ll h = hash_divisors(tree, d, valid); // pass valid as to avoid memory allocations
             auto it = cnt_hash.find(h);
             if (it != cnt_hash.end()) ans += it->second;

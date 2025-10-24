@@ -19,7 +19,7 @@ typedef vector<ll> v64;
 using Tree = vector<v64>;
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
 const ll MOD = 1'000'000'007;
-const ll MAXN= 500'007;
+const ll MAXN= 200'007;
 
 ll pow2[2*MAXN];
 v64 divs[MAXN];
@@ -56,27 +56,27 @@ ll hash_rooted(const Tree &tree, ll root, const vector<bool> &valid) {
     return dfs(root, -1).first;
 }
 
-p64 find_centroid(const Tree& tree,const ll start, const vector<bool>& valid){
-    ll n = (ll)tree.size();
+p64 find_centroid(const Tree& tree,const ll start, const vector<bool>& valid, ll N){
+    ll n = N;
 
-    vector<ll> sz(n, 0);
     ll best = n + 1, c1 = -1, c2 = -1;
 
-    function<void(ll,ll)> dfs = [&](ll u, ll p){
-        sz[u] = 1;
+    function<ll (ll,ll)> dfs = [&](ll u, ll p){
+        ll my_sz = 1;
         ll mx = 0;
         for(ll v : tree[u]) if(v != p && valid[v]){
-            dfs(v, u);
-            sz[u] += sz[v];
-            mx = max(mx, sz[v]);
+            ll v_sz = dfs(v, u);
+            my_sz += v_sz;
+            mx = max(mx, v_sz);
         }
-        mx = max(mx, n - sz[u]);
+        mx = max(mx, n - my_sz);
         if(mx < best){
             best = mx;
             c1 = u; c2 = -1;
         }else if(mx == best){
             if(u != c1) c2 = u;
         }
+        return my_sz;
     };
 
     dfs(start, -1);
@@ -84,8 +84,8 @@ p64 find_centroid(const Tree& tree,const ll start, const vector<bool>& valid){
     return {c1, c2};
 }
 
-ll hash_unrooted(const Tree& tree,const ll start, const vector<bool>& valid){
-    p64 p = find_centroid(tree, start, valid);
+ll hash_unrooted(const Tree& tree,const ll start, const vector<bool>& valid, const ll N){
+    p64 p = find_centroid(tree, start, valid, N);
     if(p.second != -1){
         ll aux1 = hash_rooted(tree, p.first, valid);
         ll aux2 = hash_rooted(tree, p.second, valid);
@@ -116,7 +116,7 @@ ll hash_div(const Tree& tree, const ll div, vector<bool>& valid){
             return my_sz;
         }
         if(my_sz == div){
-            ll my_hash = hash_unrooted(tree, v, valid);
+            ll my_hash = hash_unrooted(tree, v, valid, div);
             if(h != -1 && h != my_hash){
                 h = -2;
                 return my_sz;
@@ -148,25 +148,31 @@ int main(){
         }
     }
 
-    map<ll, ll> cnt_hash;
-    
-    for(auto &tree: vec){
+    unordered_map<ll, ll> cnt_hash;
+    v64 all_tree_hash(n);
+
+    forn(i,0,n){
+        auto &tree = vec[i];
         const ll k = tree.size();
         vector<bool> valid(k, true);
         
-        ll aux = hash_unrooted(tree, 0, valid);
+        ll aux = hash_unrooted(tree, 0, valid, tree.size());
+        all_tree_hash[i] = aux;
         cnt_hash[aux]++;
     }        
 
-    for(auto &tree: vec){
+    vector<bool> possible_sizes(MAXN);
+    forn(i,0,n){
+        auto &tree = vec[i];
         const ll k = tree.size();
+        possible_sizes[k] = true;
         vector<bool> valid(k, true);
         
-        ll aux = hash_unrooted(tree, 0, valid);
+        ll aux = all_tree_hash[i];
 
         ll ans = cnt_hash[aux]-1;
     
-        for(ll d: divs[k]) {
+        for(ll d: divs[k]) if(possible_sizes[d]){
             ll h = hash_div(tree, d, valid);
             auto it = cnt_hash.find(h);
             if(it != cnt_hash.end()) ans += it->second;

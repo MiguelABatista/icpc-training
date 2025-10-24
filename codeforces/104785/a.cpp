@@ -30,11 +30,11 @@ int solve(ll n, ll w) {
     vector<p64> vec(n);
 
     forn(i,0,g){
-        vec[i] = {i+1, g-i};
+        vec[i] = {i, i};
     }
 
     forn(i,g,n){
-        vec[i] = {i,i};
+        vec[i] = {0,i};
     }
 
 
@@ -52,6 +52,7 @@ int solve(ll n, ll w) {
     //     exit(0);
     // }
 
+    // cout << n << " " << w << ln;
     forn(i,0,n){
         cout << vec[i].first << " " << vec[i].second << ln;
     }
