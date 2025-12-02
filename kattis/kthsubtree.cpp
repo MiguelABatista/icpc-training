@@ -22,6 +22,7 @@ typedef vector<ll> v64;
 
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
 typedef vector<v64> Tree;
+ll temp[5'005];
 
 int main(){
     _;
@@ -29,24 +30,60 @@ int main(){
 
     Tree tree(n);
     forn(i,1,n){
-        ll x; cin >>x;
-        x--;
-        tree[x].push_back(i); 
-        tree[i].push_back(x); 
+        ll a, b;
+        cin >> a >> b;
+        a--; b--;
+        tree[a].push_back(b); 
+        tree[b].push_back(a); 
     }
 
     vector<v64> dp(n, v64(n+1, 0));
 
     function<ll (ll, ll)> dfs = [&](ll u, ll p){
-        
         dp[u][1] = 1;
+        dp[u][0] = 1;
+        ll sz_u = 1;
+
         for(ll v : tree[u]) if(v != p) {
-            forn(i,1,n+1){
-                
+
+            ll sz_v = dfs(v, u);
+            fill(temp, temp+n+1, 0);
+            
+            forn(i,1,sz_u+1){
+                forn(j,0,sz_v+1){
+                    if(temp[i+j] == INF) continue;
+                    if(dp[u][i] > INF/dp[v][j]){
+                        temp[i+j] = INF;
+                        continue;
+                    }
+                    temp[i+j] += dp[u][i]*dp[v][j];
+                }
             }
+            sz_u += sz_v;
+            forn(i,1,sz_u+1) dp[u][i] = temp[i]; 
         }
-        return 1ll;
+
+        return sz_u;
     };
 
+    dfs(0,-1);
+    
+    v64 qnt(n+1);
+
+    forn(v,0,n){
+        forn(i,1,n+1){
+            qnt[i] += dp[v][i];
+        }
+    }
+
+    ll sum = 0;
+    forn(i,0,n+1){
+        sum += qnt[i];
+        if(sum >= k){
+            cout << i << ln;
+            return 0;
+        }
+    }
+    cout << -1 << ln;
     return 0;
 }
