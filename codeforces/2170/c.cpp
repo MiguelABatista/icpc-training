@@ -36,8 +36,7 @@ void solve(){
 
     forn(i,0,n){
         ll targetq = (k-r[i])/(r[i]+1);
-        degr[i] = upper_bound(q.begin(), q.end(), targetq) - q.begin();
-        
+        degr[i] = upper_bound(q.begin(), q.end(), targetq) - q.begin(); 
         ll targetr = (k-1)/(q[i]+1);
         degq[i] = upper_bound(r.begin(), r.end(), targetr) - r.begin();
     }

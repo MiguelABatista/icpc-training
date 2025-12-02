@@ -31,11 +31,5 @@ ll uniform(ll l, ll r){
 
 
 int main(){
-    ll t = 1;
-    cout << t << ln;
-    ll n = 10;
-    string s = "IVX??????????";
-    cout << n << " " << 1 << ln;
-    forn(i,0,n) cout << s[uniform(0,sz(s)-1)];; cout << ln;
-    cout << n << " " << uniform(0,20) << " " << uniform(0,20) << ln;
+
 }
