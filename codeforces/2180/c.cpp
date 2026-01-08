@@ -29,11 +29,45 @@ void solve(){
     if(k%2 == 1){
         forn(i,0,k) cout << n << " ";; cout << ln;
         return;
+    } 
+
+    v64 vec(k);
+    ll livres = k-1;
+    bool first = false;
+    for(ll i = LOG; i>=0; i--){
+        ll pot2 = 1ll<<i;
+        
+        if(n&pot2){
+            if(!first) first = true;
+            forn(j,0,k) vec[j] += pot2;
+            if(livres != -1){
+                vec[livres] -= pot2;
+                livres--;
+            } else{
+                vec[0] -= pot2; 
+            }
+        }else{
+            if(!first) continue;
+            for(ll j = k-1; j > livres+((k-1 - livres)%2); j--){
+                debug(j);
+                vec[j] += pot2; 
+            }
+        }
+        debugv(vec);
+        debug(livres); 
     }
-    
-    forn(i,0,k-1) cout << n << " ";
-    cout << 0 << ln;
-}
+    ll sum = 0;
+    ll x = 0;
+    forn(i,0,k){
+        sum += vec[i];
+        x ^= vec[i];
+        cout << vec[i] << " ";
+    }
+    cout << ln;
+    // cout << sum << ln;
+    debug(sum);
+    debug(x); 
+}  
 
 int main(){
     _;

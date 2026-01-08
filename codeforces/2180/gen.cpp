@@ -29,17 +29,15 @@ ll uniform(ll l, ll r){
 	return uid(rng);
 }
 
-int main(){
-    _;
+int main(int argc, char* argv[]) {
+    if (argc < 2) return 0;
+
+    ll aux = stoi(argv[1]);
+    
+    ll n = aux%10;
+    ll k = aux/10;
+    if(k == 0) k = 1;
     cout << 1 << ln;
-    ll n = 5;
-    cout << n << ln;
-    forn(i,0,n){
-        forn(j,0,5){
-            cout << char('a'+uniform(0,25));
-        }
-        cout << " ";
-    }
-    cout << ln;
-    return 0;
+    cout << n << " " << k << ln;
 }
+

@@ -30,19 +30,18 @@ void solve(){
     string resp = vec[0];
 
     forn(i,1,n){
-        if(vec[i] >= resp){
-            resp += vec[i];
-        }else{
-            resp = vec[i] + resp;
-        }
+        string curr1 = resp + vec[i];
+        string curr2 = vec[i] + resp;
+        if(curr1 > curr2) swap(curr2, resp);
+        else swap(curr1, resp);
     }
 
-    cout << resp << ln; 
+    cout << resp << ln;
 }
 
 int main(){
-    _; 
-    ll t; cin >> t;
+    _;
+    ll t; cin >> t; 
     while(t--) solve();
     return 0;
 }

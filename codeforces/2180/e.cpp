@@ -23,9 +23,24 @@ typedef vector<ll> v64;
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
 
 void solve(){
-    ll n; cin >> n;
-    v64 vec(n);
-    forn(i,0,n) cin >> vec[i];
+    ll l, r;
+    cin >> l >> r;
+
+    
+    int exp = 63 -  __builtin_clzll(l);                          
+    ll pot = 1ll<<exp;
+    
+
+    ll pot2 = 1;
+    forn(i,0,exp+1){
+        ll curr = pot2*2;
+        if(((l&curr) == 0) || ((r&curr) == 0)){
+            debug(i);
+            break;
+        }
+        pot2 = curr; 
+    }
+    cout << pot2-1 << ln;
 }
 
 int main(){
