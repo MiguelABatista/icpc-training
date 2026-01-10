@@ -31,7 +31,7 @@ int main(){
     ll n; cin >> n;
 
     v64 vec(n);
-    map<ll, v64> inv;
+    vector<v64> inv(n+1);
     set<ll> paredes;
 
     paredes.insert(-1);
@@ -39,60 +39,88 @@ int main(){
     
     forn(i,0,n){
         cin >> vec[i];
-        inv[-vec[i]].push_back(i);
+        inv[vec[i]].push_back(i);
     }
 
     ll resp = 0;
-    for(auto& [menos_val, idxs] : inv){
-        map<p64, v64> mp;
+    v64 rs;
+    vector<v64> r_to_idxs(n+1, v64());
+    v64 r_to_l(n+1);
+
+    for(ll val = n; val >= 0; val--){
+        v64& idxs = inv[val];
+        if(idxs.empty()) continue;
+        debug(val);
+        // map<p64, v64> mp;
 
         for(ll idx: idxs){
             auto it =  paredes.lower_bound(idx);
+            
+            if(!rs.empty() && idx < rs.back()){
+                r_to_idxs[rs.back()].push_back(idx);
+                continue;
+            }
+            
             ll r = *it;
             it--;
             ll l = *it;
-            trace(
-                cout << "idx, l, r: " << idx << " " << l << " " << r << ln;
-            );
-            mp[{l,r}].push_back(idx);
+            r_to_idxs[r].push_back(idx);
+            r_to_l[r] = l;
+            if(rs.empty() || r != rs.back()) rs.push_back(r);
+            // mp[{l,r}].push_back(idx);
         }
 
         ll soma_altura = 0;
         
-        for(auto& [p, v] : mp){
-            auto [l, r] = p;
-            v64 buracos;
-            buracos.push_back(v[0]-l-1);
-            
+        // for(auto& [p, v] : mp){
+        //     auto [l, r] = p;
+        for(ll r : rs){
+            ll l = r_to_l[r];
+            v64& v = r_to_idxs[r];
 
+            ll soma_parede = escolhe2(r-l);
+
+            // v64 buracos;
+            // buracos.push_back(v[0]-l-1);
+            soma_parede -= escolhe2(v[0]-l);
             forn(i,1,sz(v)){
-                buracos.push_back(v[i]-v[i-1]-1);
+                soma_parede -= escolhe2(v[i]-v[i-1]);
+                // buracos.push_back(v[i]-v[i-1]-1);
             }
+            soma_parede -= escolhe2(r - v.back());
+            // buracos.push_back(r-v.back()-1);
 
-            // trace(
-            //     cout << "l, r = " << l << " , " << r << ln;
-            //     debugv(v);
-            //     debugv(buracos);
-            // );
-            buracos.push_back(r-v.back()-1);
+            // for(ll b: buracos) soma_parede -= escolheli2(b+1);
+            trace(
+                cout << "l, r = " << l << " , " << r << ln;
+                debugv(v);
+            );
 
-            ll soma_parede = escolhe2(r-l); 
 
-            for(ll b: buracos) soma_parede -= escolhe2(b+1);
 
             resp = (resp + soma_altura*soma_parede)%MOD; 
+            debug(soma_altura);
+            debug(soma_parede);
+            debug(soma_altura*soma_parede);
             soma_altura += soma_parede;
 
-            v64 up(sz(v)), accup(sz(v)), down(sz(v));
-
-            forn(i,0,sz(v)){
-                up[i] = ((v[i]-l)*((i == sz(v)-1 ? r : v[i+1])-v[i]))%MOD;
-                accup[i] = (up[i] + (i == 0 ? 0 : accup[i-1]))%MOD;
-                down[i] = ((r - v[i])*(v[i] - (i == 0 ? l : v[i-1])))%MOD;
-            }
-            
             ll longe = 0;
-            forn(i,2,sz(v)) longe = (longe + (down[i]*accup[i-2]))%MOD;
+            // v64 up(sz(v)), accup(sz(v)), down(sz(v));
+
+            // forn(i,0,sz(v)){
+            //     up[i] = ((v[i]-l)*((i == sz(v)-1 ? r : v[i+1])-v[i]))%MOD;
+            //     accup[i] = (up[i] + (i == 0 ? 0 : accup[i-1]))%MOD;
+            //     down[i] = ((r - v[i])*(v[i] - (i == 0 ? l : v[i-1])))%MOD;
+            // }
+            
+            // forn(i,2,sz(v)) longe = (longe + (down[i]*accup[i-2]))%MOD;
+
+            ll accup = 0;
+            forn(idx,2,sz(v)){
+                ll i = idx - 2;
+                accup = (accup + (v[i]-l)*((i == sz(v)-1 ? r : v[i+1])-v[i]))%MOD;
+                longe = (longe + ((r - v[idx])*(v[idx] - (idx == 0 ? l : v[idx-1]))%MOD)*accup)%MOD;
+            }
 
             ll perto = 0;
 
@@ -101,15 +129,18 @@ int main(){
             }
 
             resp = (resp+perto+longe)%MOD;
-            // debug(perto);
-            // debug(longe);
-            // trace(
-            //     cout << ln << ln;
-            // );
+            debug(perto);
+            debug(longe); 
+            trace(
+                cout << ln << ln;
+            );
         } 
         
         for(ll idx : idxs) paredes.insert(idx);
+        for(ll r: rs) r_to_idxs[r].clear();
+        rs.clear();
     }   
-    cout << resp << ln;
+
+    cout << resp << ln; 
     return 0;
 }
