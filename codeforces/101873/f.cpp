@@ -9,176 +9,133 @@ typedef vector<ll> v64;
 #define sz(x) ((ll) x.size())
 #define ln "\n"
 
-#ifdef DEBUG
-    #define trace(x) x
-    #define _ (void)0
-#else
-    #define trace(x) (void)0
-    #define _ ios_base::sync_with_stdio(false), cin.tie(NULL)
-#endif
-
-#define debugv(v) trace({cout << #v": "; for (auto x : v) cout<< x << " "; cout << ln;})
-#define debug(x) trace(cout << __LINE__ << ": " #x " = " << x << ln)
-
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
 
-
-struct dinitz{
-    const bool scaling = true;
-    ll lim;
-    struct edge {
-        ll to, cap, rev, flow;
-        bool res;
-        edge(ll to_, ll cap_, ll rev_, bool res_) 
-            : to(to_), cap(cap_), rev(rev_), flow(0), res(res_) {}
-        
-    };
-    
-    vector<vector<edge>> g;
-    vector<ll> lev, beg;
-    ll F;
-
-    dinitz(ll n) : g(n), F(0) {}
-
-    void add(ll a, ll b, ll c){
-        g[a].emplace_back(b, c, g[b].size(), false);
-        g[b].emplace_back(a, 0, g[a].size()-1, true);
+ll calc_overlap(string& a, string& b) {
+    ll max_ov = 0;
+    for (ll len = 1; len <= min(sz(a), sz(b)); len++) {
+        if (a.substr(sz(a) - len) == b.substr(0, len)) {
+            max_ov = len;
+        }
     }
+    return sz(b) - max_ov;
+}
 
-    bool bfs(ll s, ll t){
-        lev = vector<ll>(g.size(), -1); lev[s] = 0;
-        beg = vector<ll>(g.size(), 0);
-        queue<ll> q; q.push(s);
+int main(){
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
 
-        while(q.size()){
-            ll u = q.front(); q.pop();
-            for(auto& i: g[u]){
-                if(lev[i.to] != -1 or (i.flow == i.cap)) continue;
-                if(scaling and i.cap - i.flow < lim) continue;
-                lev[i.to] = lev[u] + 1;
-                q.push(i.to);
+    ll h, w, n;
+    if (!(cin >> h >> w >> n)) return 0;
+    
+    vector<string> raw_vs(n);
+    forn(i, 0, n) cin >> raw_vs[i];
+
+    vector<string> vs;
+    vector<bool> ignored(n, false);
+    forn(i, 0, n) {
+        forn(j, 0, n) {
+            if (i == j) continue;
+            if (raw_vs[j].find(raw_vs[i]) != string::npos) {
+                ignored[i] = true;
+                break;
             }
         }
-        return lev[t] != -1;
     }
-
-    ll dfs(ll v, ll s, ll f = INF){
-        if(!f or v == s) return f;
-        for(ll& i = beg[v]; i < g[v].size(); i++){
-            auto& e = g[v][i];
-            if(lev[e.to] != lev[v] + 1) continue;
-            ll foi = dfs(e.to, s, min(f, e.cap - e.flow));
-            if(!foi) continue;
-            e.flow += foi, g[e.to][e.rev].flow -= foi;
-            return foi;
+    forn(i, 0, n) if (!ignored[i]) vs.push_back(raw_vs[i]);
+    
+    n = sz(vs);
+    vector<v64> dist(n, v64(n));
+    vector<ll> lens(n);
+    
+    forn(i, 0, n) {
+        lens[i] = sz(vs[i]);
+        forn(j, 0, n) {
+            if (i == j) continue;
+            dist[i][j] = calc_overlap(vs[i], vs[j]);
         }
-        return 0;
     }
 
-    ll max_flow(ll s, ll t){
-        for(lim = scaling ? (1<<30) : 1 ; lim; lim /= 2)
-            while(bfs(s,t)) while(ll ff = dfs(s,t)) F += ff;
-        return F;
-    }
+    ll lim = 1LL << n;
+    vector<vector<p64>> dp(lim, vector<p64>(n, {INF, -1}));
 
-    void reset(){
-        F = 0;
-        for(auto& edges : g) for (auto& e: edges) e.flow = 0; 
-    }
-};
+    forn(i, 0, n) dp[1LL << i][i] = {lens[i], -1};
 
-int main() {
-    _;
-    ll m, n, k; cin >> m >> n >> k;
-    // sockets 0 - m-1
-    // devices m - m+n-1
-    // source m+n
-    // tink m+n+1
-    ll S = m + n;
-    ll T = m + n + 1;
-    dinitz d(m+n+2);
+    forn(mask, 1, lim) {
+        forn(i, 0, n) {
+            if (!((mask >> i) & 1)) continue;
+            if (dp[mask][i].first == INF) continue;
 
-    forn(i, 0, k) {
-        ll a, b; cin >> a >> b;
-        b += m;
-        a--; b--;
-        d.add(a, b, 1);
-    }
-    forn(i, 0, m) {
-        d.add(S, i, 1);
-    }
-    forn(i, m, m+n) {
-        d.add(i, T, 1);
-    }
-
-    ll ans = d.max_flow(S, T);
-
-    vector<set<ll>> g(n+m);
-
-    vector<bool> isp(n+m);
-
-    forn(i, 0, m+n) {
-        for (auto edg : d.g[i]) {
-            if (edg.flow == edg.cap) {
-                if(edg.to == T) {
-                    isp[i] = true;
+            forn(j, 0, n) {
+                if (!((mask >> j) & 1)) {
+                    ll next_mask = mask | (1LL << j);
+                    ll new_cost = dp[mask][i].first + dist[i][j];
+                    if (new_cost < dp[next_mask][j].first) {
+                        dp[next_mask][j] = {new_cost, i};
+                    }
                 }
-                continue;
             }
-            if (edg.to == S || edg.to == T) continue;
-            g[i].insert(edg.to);
         }
     }
 
-    
-    vector<ll> visited(m+n);
-    vector<p64> mud_g;
-    vector<ll> mud_isp;
-    
-    function<bool (ll u)> dfs = [&](ll u) {
-        visited[u] = true;
-        if (!isp[u] && u >= m) {
-            isp[u] = true;
-            mud_isp.push_back(u);
-            return true;
-        }
-
-        for(ll v: g[u]){
-            if (visited[v]) continue;
-
-            if (dfs(v)) {
-                mud_g.push_back({u,v});
-                g[v].insert(u);
-                g[u].erase(v);
-                return true;
+    vector<p64> best_for_mask(lim, {INF, -1});
+    forn(mask, 1, lim) {
+        forn(i, 0, n) {
+            if (((mask >> i) & 1) && dp[mask][i].first < best_for_mask[mask].first) {
+                best_for_mask[mask] = {dp[mask][i].first, i};
             }
         }
-        return false;        
-    };
-    
-    ll base = ans;
-    forn(i, 0, m) {
-        visited.assign(n+m, false);
-        ll resp = base;
-
-        if (dfs(i)) {
-            resp++;
-            if (dfs(i)) resp++;
-        }
-
-        ans = max(ans, resp);
-        for(ll x: mud_isp) isp[x] = false;
-        for(auto p: mud_g){
-            auto [u,v] = p;
-            g[v].erase(u);
-            g[u].insert(v);
-        }
-
-        mud_isp.clear();
-        mud_g.clear();
     }
 
-    cout << ans << ln;
-    
+    v64 row_masks(h, 0);
+    forn(i, 0, n) {
+        ll best_inc = INF;
+        ll best_r = -1;
+        
+        forn(r, 0, h) {
+            ll mask = row_masks[r];
+            ll new_mask = mask | (1LL << i);
+            
+            if (best_for_mask[new_mask].first <= w) {
+                if (best_for_mask[new_mask].first < best_inc) {
+                    best_inc = best_for_mask[new_mask].first;
+                    best_r = r;
+                }
+            }
+        }
+        
+        if (best_r == -1) {
+            cout << "impossible" << ln;
+            return 0;
+        }
+        row_masks[best_r] |= (1LL << i);
+    }
+
+    forn(r, 0, h) {
+        ll mask = row_masks[r];
+        if (mask == 0) {
+            cout << "" << ln;
+            continue;
+        }
+        
+        v64 path;
+        ll curr = best_for_mask[mask].second;
+        while(curr != -1) {
+            path.push_back(curr);
+            ll prev = dp[mask][curr].second;
+            mask ^= (1LL << curr);
+            curr = prev;
+        }
+        reverse(path.begin(), path.end());
+        
+        string res = vs[path[0]];
+        forn(k, 1, sz(path)) {
+            ll u = path[k-1];
+            ll v = path[k];
+            res += vs[v].substr(lens[v] - dist[u][v]);
+        }
+        cout << res << ln;
+    }
+
     return 0;
 }

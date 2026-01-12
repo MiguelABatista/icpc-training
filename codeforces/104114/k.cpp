@@ -23,147 +23,248 @@ typedef vector<ll> v64;
 
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
 ll n;
-vector<vector<p64>> g;
-vector<bool> valid;
-vector<v64> a_to_b;
-map<p64, ll> ans;
 
+vector<map<ll, ll>> g;
 
-// Dijkstra's Shortest Paths
+// Segment Tree (Range Query + Point Update)
 //
-// Computes single-source shortest paths on non-negative weighted graphs using a priority queue.
+//supports point updates and range queries.
 //
-// complexity: O((N + M) log N), O(N + M)
+// complexity: O(log N) per op, O(N)
+const ll d = 11;
 
-// d = distance | p = from/path
-void dijkstra(ll s, v64 &d, ll l, ll r) {
-    d.assign(n, INF);
-
-    d[s] = 0;
-    priority_queue<p64> pq;
-    pq.push({0, s});
-    while (!pq.empty()) {
-        ll u = pq.top().second;
-        ll d_u = -pq.top().first;
-        pq.pop();
-
-        if (d_u != d[u]) continue;
-
-        for (auto edge : g[u]) {
-            ll v = edge.first;
-            if(v < l || v > r) continue;
-            ll w_v = edge.second;
-
-            if (d[u] + w_v < d[v]) {
-                d[v] = d[u] + w_v;
-                pq.push({-d[v], v});
-            }
-        }
-    }
-}
-
-void dnc(ll l, ll r){
-    if(r <= l) return;
-    ll mid = (l+r)/2;
+struct node {
     
-    ll lmid = max(mid-4, l);
-    ll rmid = min(r, mid+5);
-    // mid-4 mid-3 mid-2 mid-1 mid mid+1 mid+2 mid+3 mid+4 mid+5
+    vector<v64> mat;
+    ll l, r;
+    node() : mat(d,v64(d, 0)), l(-10), r(-10){}
+    node(ll x) : mat(d,v64(d, 0)), l(x), r(x){}
+    
+    void print(){
+        cout << l << " " << r << ln;
+        forn(i,0,d){
+            forn(j,0,d){
+                cout << setw(3) << (mat[i][j] >= INF ? 999 : mat[i][j]) << " ";
+            }
+            cout << ln;
+        }
+        cout << ln;
+    }
+    
+    static node comb(node& a, node& b, bool printa = false) {
+        node no(0);
+        if(a.l == -1) return b;
+        if(b.l == -1) return a;
 
-    vector<v64> ds(10);
-    forn(i,lmid,rmid+1) dijkstra(i,ds[i-lmid], l-10, r+10);
+        no.l = a.l;
+        no.r = b.r;
 
-    forn(a,l,lmid){
-        if(a_to_b[a].empty()) continue;
-        auto& bs = a_to_b[a]; 
-        while(!bs.empty() && bs.back() > rmid){
-            ll b = bs.back();
-            bs.pop_back();
-            ll best = INF;
-            debug(a);
-            debug(b);
-            forn(i,lmid,rmid+1){
-                forn(j,lmid,rmid+1){ 
-                    ll idx = i-lmid;
-                    ll jdx = j-lmid;
-                    // a -> i -> j -> b
-                    ll curr = ds[idx][a];
-                    curr += ds[idx][j];
-                    if(curr > INF) curr = INF;
-                    curr += ds[jdx][b];
-                    
-                    if(curr > INF) curr = INF;
-                    best = min(curr, best);
+        if(no.l == -1 || no.r == -1) assert(false);
+        if(printa){
+            a.print();
+            b.print();
+        }
+
+        vector<v64> intermed(d, v64(d));
+
+        forn(i,0,d){
+            forn(j,0,d){
+                if(a.r*d+i >= n || b.l*d + j >= n){
+                    intermed[i][j] = INF;
+                    continue;
+                } 
+                ll val = g[a.r*d + i][b.l*d + j];
+                if(val == 0){
+                    intermed[i][j] = INF;
+                }else{
+                    intermed[i][j] = val;
                 }
             }
-            ans[{a,b}] = best;
         }
-    }
 
-    forn(a,lmid,rmid+1){
-        if(a_to_b[a].empty()) continue;
-        auto& bs = a_to_b[a]; 
-        while(!bs.empty() && bs.back() > mid){
-            ll b = bs.back();
-            bs.pop_back();
-            ll best = INF;
-            forn(i,lmid,rmid+1){
-                forn(j,lmid,rmid+1){ 
-                    ll idx = i-lmid;
-                    ll jdx = j-lmid;
-                    // a -> i -> j -> b
-                    ll curr = ds[idx][a];
-                    curr += ds[idx][j];
-                    if(curr > INF) curr = INF;
-                    curr += ds[jdx][b];
-                    
-                    if(curr > INF) curr = INF;
-                    best = min(curr, best);
+        forn(i,0,d){
+            forn(j,0,d){
+                ll& ans = no.mat[i][j];
+                ans = INF;
+                forn(k,0,d){
+                    ans = min(ans, (a.mat[i][k] + intermed[k][j] >= INF ? INF : a.mat[i][k] + intermed[k][j]));
                 }
             }
-            ans[{a,b}] = best;
+        }
+
+        intermed = no.mat;
+        
+        forn(i,0,d){
+            forn(j,0,d){
+                ll& ans = no.mat[i][j];
+                ans = INF;
+                forn(k,0,d){
+                    ans = min(ans, (intermed[i][k] + b.mat[k][j] >= INF ? INF : intermed[i][k] + b.mat[k][j]));
+                }
+            }
+        }
+        return no;
+    }
+};
+
+template<typename T> struct segtree {
+    ll nseg;
+    T neutral;
+    vector<T> tree;
+    
+    segtree<T>(ll _n, T _neutral) {
+        nseg = _n, neutral = _neutral;
+        tree.resize(2*nseg+1, neutral);
+    }
+    
+    void set_leaves(vector<T> &leaves) {
+        copy(leaves.begin(), leaves.end(), tree.begin() + nseg);
+        
+        for (ll i = nseg - 1; i > 0; i--) tree[i] = T::comb(tree[2 * i], tree[2 * i + 1]);
+    }
+    
+    void update(ll i, T v) {
+        i += nseg;
+        tree[i] = v;
+        while (i > 1) {
+            i /= 2;
+            tree[i] = T::comb(tree[2 * i], tree[2 * i + 1]);
         }
     }
-    dnc(l, lmid);
-    dnc(rmid, r);
-}
+    
+    T query(ll i, ll j) {
+        T rl = neutral, rr = neutral;
+        for(i += nseg, j += nseg; i <= j; i /= 2, j /= 2){
+            if((i&1) == 1) rl = T::comb(rl, tree[i++]);
+            if((j&1) == 0) rr = T::comb(tree[j--], rr);
+        }
+        return T::comb(rl, rr);
+    }
+
+    void print(){
+        for(auto nu: tree) nu.print();
+    }
+};
 
 int main(){
     _;
     ll m, q; cin >> n >> m >> q;
     g.resize(n);
-    a_to_b.resize(n);
-    valid.resize(n);
-
+    
     forn(i,0,m){
         ll a, b, w;
         cin >> a >> b >> w;
         a--,b--;
-        g[a].push_back({b,w});
-        g[b].push_back({a,w});
+        g[a][b] = w;
+        g[b][a] = w;
     }
 
-    vector<p64> perg(q);
+    forn(i,0,n){
+        for(auto [v, wv] : g[i]){
+            if(v < i) continue;
+            for(auto [u, wu] : g[i]){
+                if(u == v) continue;
+                if(u < i) continue;
+                
+                if(g[v][u] == 0){
+                    g[u][v] = g[v][u] = wv + wu; 
+                }else if (wv + wu < g[v][u]){
+                    g[u][v] = g[v][u] = wv + wu; 
+                }
+            }
+        }
+    }
 
-    forn(i,0,q){
+
+    for(ll i = n-1; i >= 0; i--){
+        for(auto [v, wv] : g[i]){
+            if(v > i) continue;
+            for(auto [u, wu] : g[i]){
+                if(u == v) continue;
+                if(u > i) continue;
+                
+                if(g[v][u] == 0){
+                    g[u][v] = g[v][u] = wv + wu; 
+                }else if (wv + wu < g[v][u]){
+                    g[u][v] = g[v][u] = wv + wu; 
+                }
+            }
+        }
+    }
+
+    ll segn = (n+d-1)/d;
+    
+    vector<node> aux;
+
+    forn(t,0,segn){
+        node nn(t);
+        auto& dist = nn.mat;
+
+        forn(i,0,d){
+            forn(j,0,d){
+                if(i == j) continue;
+                if(t*d+i >= n || t*d + j >= n){
+                    dist[i][j] = INF;
+                    continue;
+                };
+                dist[i][j] = (g[t*d + i][t*d + j] == 0 ? INF : g[t*d + i][t*d + j]);
+            }
+        }
+        
+        forn(k,0,d)
+        forn(i,0,d)
+        forn(j,0,d){
+            dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j]);
+        }
+
+        debug(t);
+        aux.push_back(nn);
+    }   
+
+    // aux[0].print();
+
+    // auto asd = node::comb(aux[0],aux[1]);
+    // trace(
+    //     aux[0].print();
+    //     aux[1].print();
+    //     asd.print();
+    // );
+
+    node neu(-1); 
+
+    forn(i,0,d){
+        forn(j,0,d) if(i!=j){
+            neu.mat[i][j] = INF;
+        }
+    } 
+
+    segtree<node> seg(segn,neu);
+    seg.set_leaves(aux);
+    trace(
+        seg.print();
+    );
+    // node::comb(aux[0], neu, true).print();
+
+    forn(iiiiiii,0,q){ 
         ll a, b; cin >> a >> b;
         a--, b--;
         if(a > b) swap(a,b);
-        perg.push_back({a,b});
-        a_to_b[a].push_back(b);
+
+        ll i = a%d;
+        ll l = a/d;
+
+        ll j = b%d;
+        ll r = b/d;
+
+        auto nan = seg.query(l,r);
+        ll ans = nan.mat[i][j]; 
+        // trace(
+        //     cout << l << " " << r << " " << i << " " << j << ln;
+        //     nan.print();
+        // );
+        if(ans >= INF) ans = -1;
+        cout << ans << ln;
     }
 
-    forn(i,0,n) sort(a_to_b[i].begin(), a_to_b[i].end());
-
-    dnc(0,n-1);
-
-    trace(
-        cout << "LAMPREIA" << ln;
-        cout << sz(ans) << ln;
-        for(auto [p, v] : ans){
-            cout << p.first << ":" << p.second << " " << v << ln;
-        }
-    );
-
     return 0;
-}
+} 

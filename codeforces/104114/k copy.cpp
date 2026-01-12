@@ -1,169 +1,109 @@
-#include <bits/stdc++.h>
+#include<bits/stdc++.h>
+
 using namespace std;
 
+#define _ ios_base::sync_with_stdio(0);cin.tie(0);
+#define endl '\n'
+
 typedef long long ll;
-typedef pair<ll, ll> p64; 
-typedef vector<ll> v64;
 
-#define forn(i, s, e) for(ll i = (s); i < (e); i++)
-#define sz(x) ((ll) x.size())
-#define ln "\n"
+const int INF = 0x3f3f3f3f;
+const ll LINF = 0x3f3f3f3f3f3f3f3fll;
 
-#ifdef DEBUG
-    #define trace(x) x
-    #define _ (void)0
-#else
-    #define trace(x) (void)0
-    #define _ ios_base::sync_with_stdio(false), cin.tie(NULL)
-#endif
+const int MAX = 1e5 + 10;
 
-#define debugv(v) trace({cout << #v": "; for (auto u : v) cout<< u << " "; cout << ln;})
-#define debugm(v) trace({cout << #v": "; for (auto u : v) cout<< u.first << ":" << u.second << " "; cout << ln;})
-#define debug(x) trace(cout << __LINE__ << ": " #x " = " << x << ln)
+bool dead[MAX];
+ll d[MAX];
+vector<pair<int, int>> g[MAX];
 
-const ll INF = 0x3f3f3f3f3f3f3f3fll;
-ll n;
-vector<vector<p64>> g;
-vector<bool> valid;
-vector<v64> a_to_b;
-map<p64, ll> ans;
+void dijkstra(int v) {
+	d[v] = 0;
+	priority_queue<pair<ll, int>> pq;
+	pq.emplace(0, v);
 
+	while (pq.size()) {
+		auto [ndist, u] = pq.top(); pq.pop();
+		if (-ndist > d[u]) continue;
 
-// Dijkstra's Shortest Paths
-//
-// Computes single-source shortest paths on non-negative weighted graphs using a priority queue.
-//
-// complexity: O((N + M) log N), O(N + M)
-
-// d = distance | p = from/path
-void dijkstra(ll s, v64 &d, ll l, ll r) {
-    d.assign(n, INF);
-
-    d[s] = 0;
-    priority_queue<p64> pq;
-    pq.push({0, s});
-    while (!pq.empty()) {
-        ll u = pq.top().second;
-        ll d_u = -pq.top().first;
-        pq.pop();
-
-        if (d_u != d[u]) continue;
-
-        for (auto edge : g[u]) {
-            ll v = edge.first;
-            if(v < l || v > r) continue;
-            ll w_v = edge.second;
-
-            if (d[u] + w_v < d[v]) {
-                d[v] = d[u] + w_v;
-                pq.push({-d[v], v});
-            }
-        }
-    }
+		for (auto [idx, w] : g[u]) if (!dead[idx] and d[idx] > d[u] + w) {
+			d[idx] = d[u] + w;
+			pq.emplace(-d[idx], idx);
+		}
+	}
 }
 
-void dnc(ll l, ll r){
-    if(r <= l) return;
-    ll mid = (l+r)/2;
-    
-    ll lmid = max(mid-4, l);
-    ll rmid = min(r, mid+5);
-    // mid-4 mid-3 mid-2 mid-1 mid mid+1 mid+2 mid+3 mid+4 mid+5
+ll ans[MAX];
+int qv[MAX], qu[MAX];
 
-    vector<v64> ds(10);
-    forn(i,lmid,rmid+1) dijkstra(i,ds[i-lmid], l-10, r+10);
+vector<int> q_now[MAX];
 
-    forn(a,l,lmid){
-        if(a_to_b[a].empty()) continue;
-        auto& bs = a_to_b[a]; 
-        while(!bs.empty() && bs.back() > rmid){
-            ll b = bs.back();
-            bs.pop_back();
-            ll best = INF;
-            debug(a);
-            debug(b);
-            forn(i,lmid,rmid+1){
-                forn(j,lmid,rmid+1){ 
-                    ll idx = i-lmid;
-                    ll jdx = j-lmid;
-                    // a -> i -> j -> b
-                    ll curr = ds[idx][a];
-                    curr += ds[idx][j];
-                    if(curr > INF) curr = INF;
-                    curr += ds[jdx][b];
-                    
-                    if(curr > INF) curr = INF;
-                    best = min(curr, best);
-                }
-            }
-            ans[{a,b}] = best;
-        }
-    }
-
-    forn(a,lmid,rmid+1){
-        if(a_to_b[a].empty()) continue;
-        auto& bs = a_to_b[a]; 
-        while(!bs.empty() && bs.back() > mid){
-            ll b = bs.back();
-            bs.pop_back();
-            ll best = INF;
-            forn(i,lmid,rmid+1){
-                forn(j,lmid,rmid+1){ 
-                    ll idx = i-lmid;
-                    ll jdx = j-lmid;
-                    // a -> i -> j -> b
-                    ll curr = ds[idx][a];
-                    curr += ds[idx][j];
-                    if(curr > INF) curr = INF;
-                    curr += ds[jdx][b];
-                    
-                    if(curr > INF) curr = INF;
-                    best = min(curr, best);
-                }
-            }
-            ans[{a,b}] = best;
-        }
-    }
-    dnc(l, lmid);
-    dnc(rmid, r);
+pair<int, int> mid(int l, int r) {
+	int m = (l + r)/2;
+	return {max(l, m - 5), min(r, m + 4)};
 }
 
-int main(){
-    _;
-    ll m, q; cin >> n >> m >> q;
-    g.resize(n);
-    a_to_b.resize(n);
-    valid.resize(n);
-
-    forn(i,0,m){
-        ll a, b, w;
-        cin >> a >> b >> w;
-        a--,b--;
-        g[a].push_back({b,w});
-        g[b].push_back({a,w});
-    }
-
-    vector<p64> perg(q);
-
-    forn(i,0,q){
-        ll a, b; cin >> a >> b;
-        a--, b--;
-        if(a > b) swap(a,b);
-        perg.push_back({a,b});
-        a_to_b[a].push_back(b);
-    }
-
-    forn(i,0,n) sort(a_to_b[i].begin(), a_to_b[i].end());
-
-    dnc(0,n-1);
-
-    trace(
-        cout << "LAMPREIA" << ln;
-        cout << sz(ans) << ln;
-        for(auto [p, v] : ans){
-            cout << p.first << ":" << p.second << " " << v << ln;
-        }
-    );
-
-    return 0;
+bool now(int u, int v, int l, int r) {
+	return l <= u and u <= r and l <= v and v <= r;
 }
+
+int main() { _
+	memset(ans, INF, sizeof ans);
+
+	int n, m, q; cin >> n >> m >> q;
+	for (int i = 0; i < m; i++) {
+		int u, v, w; cin >> u >> v >> w; u--, v--;
+		g[u].emplace_back(v, w);
+		g[v].emplace_back(u, w);
+	}
+
+	for (int i = 0; i < q; i++) {
+		cin >> qv[i] >> qu[i]; qv[i]--, qu[i]--;
+		if (qv[i] > qu[i]) swap(qv[i], qu[i]);
+	}
+
+	vector<pair<int, int>> ranges = {{0, n - 1}};
+
+	while (not ranges.empty()) {
+
+		for (int i = 0; i < q; i++) {
+			int j = upper_bound(ranges.begin(), ranges.end(), pair(qv[i], INF)) - ranges.begin();
+			j--;
+			if (j < 0) continue;
+			if (now(qv[i], qu[i], ranges[j].first, ranges[j].second)) {
+				q_now[j].push_back(i);
+			}
+		}
+
+		for (int r_i = 0; r_i < ranges.size(); r_i++) {
+			auto [l, r] = ranges[r_i];
+			auto [L, R] = mid(l, r);
+
+			for (int v = L; v <= R; v++) {
+				for (int i = l; i <= r; i++) d[i] = LINF;
+				
+				dijkstra(v);
+
+				for (int qid : q_now[r_i])
+					ans[qid] = min(ans[qid], d[qv[qid]] + d[qu[qid]]);
+			}
+
+			for (int i = L; i <= R; i++) dead[i] = true;
+			q_now[r_i].clear();
+		}
+
+		vector<pair<int, int>> n_ranges;
+		for (auto [l, r] : ranges) {
+			auto [L, R] = mid(l, r);
+			
+			if (l < L) n_ranges.emplace_back(l, L - 1);
+			if (R < r) n_ranges.emplace_back(R + 1, r);
+		}
+
+		swap(ranges, n_ranges);
+	}
+
+	for (int i = 0; i < q; i++) cout << (ans[i] != LINF ? ans[i] : -1) << endl;
+
+	exit(0);
+}
+
