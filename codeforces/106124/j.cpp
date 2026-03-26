@@ -2,34 +2,90 @@
 using namespace std;
 
 typedef long long ll;
-typedef pair<ll, ll> p64; 
+typedef pair<ll, ll> p64;
 typedef vector<ll> v64;
 
-#define forn(i, s, e) for(ll i = (s); i < (e); i++)
-#define sz(x) ((ll) x.size())
+#define forn(i, s, e) for (ll i = (s); i < (e); i++)
+#define sz(u) ((ll) u.size())
 #define ln "\n"
 
 #ifdef DEBUG
-    #define trace(x) x
-    #define _ (void)0
+#define trace(u) u
+#define _
 #else
-    #define trace(x) (void)0
-    #define _ ios_base::sync_with_stdio(false), cin.tie(NULL)
+#define trace(u)
+#define _ ios::sync_with_stdio(0); cin.tie(0)
 #endif
 
-#define debugv(v) trace({cout << #v": "; for (auto x : v) cout<< x << " "; cout << ln;})
-#define debug(x) trace(cout << __LINE__ << ": " #x " = " << x << ln)
+#define debug(u) trace(cout << #u " = " << u << ln)
+#define debugv(v) trace(cout << #v ": "; for (auto xx : v) cout << xx << " "; cout << ln)
 
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
 
-void solve(){
-    ll n; cin >> n;
-    v64 vec(n);
-    forn(i,0,n) cin >> vec[i];
+// Linear Sieve (prime precomputation)
+//
+// Computes primes up to N in O(N) using the smallest prime factor (lp).
+// pr will contain all primes <= N.
+// lp[x] stores the smallest prime dividing x.
+//
+// complexity: O(N)
+
+
+pair<v64, v64> sieve(ll n){
+    v64 lp(n+1);
+    v64 pr;
+    forn(i, 2, n+1) {
+        if (lp[i] == 0) {
+            lp[i] = i;
+            pr.push_back(i);
+        }
+        for (ll j = 0; i * pr[j] <= n; ++j) {
+            lp[i * pr[j]] = pr[j];
+            if (pr[j] == lp[i]) {
+                break;
+            }
+        }
+    }
+    return {pr, lp};
+}
+
+v64 calc_d(v64& lp) {
+    ll n = sz(lp) - 1;
+    v64 ans(n);
+    ans[1] = 1;
+    forn(i, 2, n) {
+        ll p = lp[i], x = i / p;
+        if (lp[x] != p) ans[i] = 1;
+        else ans[i] = ans[x] + 1;
+    }
+    forn(i, 2, n) {
+        ll p = lp[i], x = i / p;
+        if (ans[i] == 1) ans[i] = ans[x] * 2;
+        else ans[i] = (ans[x] / ans[i]) * (ans[i] + 1);
+    }
+    return ans;
+}
+
+vector<v64> divs(ll n){
+    vector<v64> d(n);
+    forn(i,1,n){
+        for(ll j = i; j < n;j += i ){
+            d[j].push_back(i);
+        }
+    }
+    return d;
 }
 int main(){
     _;
-    ll t; cin >> t;
-    while(t--) solve();
+    ll n = 10000;
+    auto [pr, lp] = sieve(n);
+    v64 vec = calc_d(lp);
+    auto d= divs(n);
+    v64 ve2(n);
+    forn(i,0,n) ve2[i] = sz(d[i]);
+    // debugv(vec);
+    // debugv(ve2);
+
+    forn(i,0,n) if(vec[i] != ve2[i]) cout << i << ln;
     return 0;
 }

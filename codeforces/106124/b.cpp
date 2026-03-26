@@ -137,18 +137,11 @@ int main(){
     for(; curr_idx >= 0; curr_idx--){
         if(bom) break;
 
-        debug(largura_pilha_deitada);
-        debug(books[curr_idx].first);
-        debug(largura_pilha_pe);
-
         ll c1 = w - (max(largura_pilha_deitada, books[curr_idx].first) + largura_pilha_pe);
         ll c2 = h - (altura_pilha_deitada +  books[curr_idx].second);
         if(c1 < 0 || c2 < 0) continue;
 
-        debug(c1);
-        debug(c2);
         if(knapsack(books, curr_idx, c1, c2, ans, mini)){
-            debug(1);
             if(testa(books, h, w, ans, ans2)){
                 bom = true;
                 break;
@@ -157,9 +150,9 @@ int main(){
 
         if(curr_idx == 0){            
             if(testa(books, h, w, ans, ans2)) bom = true;
-
             break;
         }
+        
         largura_pilha_pe += books[curr_idx].second;
         mini = 0;
         ans2.insert(curr_idx);

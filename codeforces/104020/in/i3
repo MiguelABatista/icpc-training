@@ -1,0 +1,13 @@
+10 2
+1 micrometer = 1000 nanometer
+1 millimeter = 1000 micrometer
+1 meter = 1000 millimeter
+1 kilometer = 1000 meter
+1 megameter = 1000 kilometer
+1 lightsecond = 299.792458 meter
+1 lightminute = 60 lightsecond
+1 lighthour = 60 lightminute
+1 lightday = 24 lighthour
+1 lightyear = 365.25 lightday
+42 nanometer to lightyear
+42 lightyear to nanometer

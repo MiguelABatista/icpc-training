@@ -21,7 +21,8 @@ typedef vector<ll> v64;
 #define debugm(v) trace({cout << #v": "; for (auto u : v) cout<< u.first << ":" << u.second << " "; cout << ln;})
 #define debug(x) trace(cout << __LINE__ << ": " #x " = " << x << ln)
 
-const ll INF = 0x3f3f3f3f3f3f3f3fll;
+// const ll INF = 0x3f3f3f3f3f3f3f3fll;
+const ll INF = 999;
 ll n;
 
 vector<map<ll, ll>> g;
@@ -31,7 +32,7 @@ vector<map<ll, ll>> g;
 //supports point updates and range queries.
 //
 // complexity: O(log N) per op, O(N)
-const ll d = 11;
+const ll d = 4;
 
 struct node {
     
@@ -51,7 +52,7 @@ struct node {
         cout << ln;
     }
     
-    static node comb(node& a, node& b, bool printa = false) {
+    static node comb(node& a, node& b) {
         node no(0);
         if(a.l == -1) return b;
         if(b.l == -1) return a;
@@ -60,10 +61,6 @@ struct node {
         no.r = b.r;
 
         if(no.l == -1 || no.r == -1) assert(false);
-        if(printa){
-            a.print();
-            b.print();
-        }
 
         vector<v64> intermed(d, v64(d));
 
@@ -107,6 +104,45 @@ struct node {
     }
 };
 
+v64 apply(v64& vec,ll p, node& no){
+    v64 aux(d, INF);
+    trace(
+        cout << p << ln;
+        forn(i,0,d) cout << vec[i] << " ";; cout << ln;
+        no.print();
+    );
+
+    forn(i,0,d)
+    forn(j,0,d){
+        ll curr = vec[i] + no.mat[i][j]; 
+        
+        ll val = INF;
+        if(p*d+i < n && no.l*d+i < n){
+            val = g[p*d+i][no.l*d+i];
+        } 
+        debug(p*d+i);
+        debug(no.l*d+i);
+        debug(val);
+        if(val == INF){
+            curr = INF;
+        }else if(val == 0 && p != no.l){
+            curr = INF;
+        } else{
+            curr += val;
+        }
+        trace(
+            cout << i << " " << j << " " << curr << ln;
+        );
+        aux[j] = min(aux[j] , (curr >= INF ? INF : curr));
+    }
+
+    trace(
+        forn(i,0,d) cout << aux[i] << " ";; cout << ln << ln;;
+    );
+
+    return aux;
+}
+
 template<typename T> struct segtree {
     ll nseg;
     T neutral;
@@ -145,6 +181,34 @@ template<typename T> struct segtree {
         for(auto nu: tree) nu.print();
     }
 };
+
+void query_apply_vector(ll i, ll j, v64& vec, segtree<node>& seg) {
+    // Pilha para guardar os índices dos nós da direita
+    // Como a altura da árvore é log(N), um vetor pequeno basta
+    vector<int> right_nodes; 
+    right_nodes.reserve(30); 
+
+    ll p = i;
+    for (i += seg.nseg, j += seg.nseg; i <= j; i /= 2, j /= 2) {
+        if ((i & 1) == 1) {
+            vec = apply(vec,p, seg.tree[i]);
+            p = seg.tree[i].r;
+            i++;
+        }
+        
+        if ((j & 1) == 0) {
+            right_nodes.push_back(j);
+            j--;
+        }
+    }
+    
+    for (int k = right_nodes.size() - 1; k >= 0; k--) {
+        int node_idx = right_nodes[k];
+        vec = apply(vec,p, seg.tree[node_idx]);
+        p = seg.tree[i].r;
+    }
+}
+
 
 int main(){
     _;
@@ -217,18 +281,8 @@ int main(){
             dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j]);
         }
 
-        debug(t);
         aux.push_back(nn);
     }   
-
-    // aux[0].print();
-
-    // auto asd = node::comb(aux[0],aux[1]);
-    // trace(
-    //     aux[0].print();
-    //     aux[1].print();
-    //     asd.print();
-    // );
 
     node neu(-1); 
 
@@ -240,12 +294,8 @@ int main(){
 
     segtree<node> seg(segn,neu);
     seg.set_leaves(aux);
-    trace(
-        seg.print();
-    );
-    // node::comb(aux[0], neu, true).print();
 
-    forn(iiiiiii,0,q){ 
+    forn(ii,0,q){ 
         ll a, b; cin >> a >> b;
         a--, b--;
         if(a > b) swap(a,b);
@@ -256,14 +306,23 @@ int main(){
         ll j = b%d;
         ll r = b/d;
 
-        auto nan = seg.query(l,r);
-        ll ans = nan.mat[i][j]; 
-        // trace(
-        //     cout << l << " " << r << " " << i << " " << j << ln;
-        //     nan.print();
-        // );
-        if(ans >= INF) ans = -1;
-        cout << ans << ln;
+        v64 ans(d, INF);
+        ans[i] = 0;
+
+        query_apply_vector(l, r, ans, seg);
+        ll resp = ans[j];
+        if(resp >= INF) resp = -1;
+        
+        cout << resp << ln;
+        // auto nan = seg.query(l,r);
+        // ll ans2 = nan.mat[i][j]; 
+        // // trace(
+        //     //     cout << l << " " << r << " " << i << " " << j << ln;
+        //     //     nan.print();
+        //     // );
+        // if(ans2 >= INF) ans2 = -1;
+            
+        // cout << resp << " " << ans2 << ln;
     }
 
     return 0;
