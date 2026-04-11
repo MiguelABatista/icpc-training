@@ -22,7 +22,21 @@ typedef vector<ll> v64;
 
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
 
-// int main() {
-//     _;
-//     return 0;
-// }
+ll solve(ll n, ll k){
+    if(n == 1) return 1;
+    if(k <= (n+1)/2) return (2*k > n ? (2*k)%n : 2*k) ;
+    ll x = solve(n/2, k - (n+1)/2);
+    if(n%2) return 2*x + 1;
+    return 2*x - 1;
+}
+
+int main() {
+    _;
+    ll q; cin >> q;
+    while(q--){
+        ll n, k; cin >> n >> k;
+        cout << solve(n,k) << ln;
+    }
+    return 0;
+}
+

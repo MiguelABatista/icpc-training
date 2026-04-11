@@ -21,8 +21,135 @@ typedef vector<ll> v64;
 #define debugv(v) trace(cout << #v ": "; for (auto xx : v) cout << xx << " "; cout << ln)
 
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
+ 
+/**
+ * Description: Decomposes a tree into vertex disjoint heavy paths and light
+ * edges such that the path from any leaf to the root contains at most log(n)
+ * light edges. Code does additive modifications and max queries, but can
+ * support commutative tree modifications/queries on paths and subtrees.
+ * Takes as input the full adjacency list. VALS\_EDGES being true means that
+ * values are stored in the edges, as opposed to the nodes. All values
+ * initialized to the tree default. Root must be 0.
+ * Time: O((\log N)^2)
+ * Status: stress-tested against old HLD
+ */
+ 
+ 
+// Segment Tree (Range Query + Range Update)
+//
+// Tree for range queries with a customizable combine; supports range updates and range queries.
+//
+// complexity: O(log N) per op, O(N) to build
 
+struct Node {
+    ll sum, cnt;
+    Node operator*(const Node &o) const { return {sum + o.sum, cnt + o.cnt}; }
+};
 
+struct Update {
+    ll add = 0;
+    optional<ll> set;
+
+    Node operator()(const Node &n) const {
+        ll res = set.has_value() ? *set * n.cnt : n.sum;
+        return {res + add * n.cnt, n.cnt};
+    }
+
+    Update operator+(const Update &o) const {
+        Update res = *this;
+        if (o.set.has_value()) {
+            res.set = o.set;
+            res.add = 0;
+        }
+        if (o.add != 0) {
+            if (res.set.has_value()) *res.set += o.add;
+            else res.add += o.add;
+        }
+        return res;
+    }
+};
+
+template<typename T, typename U> struct segtree {
+  ll s, h;
+
+  T id;
+  vector<T> val;
+
+  U noop;
+  vector<bool> dirty;
+  vector<U> prop;
+
+  segtree(ll ts, T tid = T(), U tnoop = U()) {
+    id = tid, noop = tnoop;
+    for (s = 1, h = 1; s < ts; ) s *= 2, h++;
+
+    val.assign(2*s, id);
+    dirty.assign(2*s, false);
+    prop.assign(2*s, noop);
+  }
+
+  void set_leaves(vector<T> &lvs) {
+    copy(lvs.begin(), lvs.end(), val.begin() + s);
+
+    for (ll i = s - 1; i > 0; i--) val[i] = val[2 * i] * val[2 * i + 1];
+    dirty.assign(2*s, false);
+    prop.assign(2*s, noop);
+  }
+
+  void apply(ll i, U &upd) {
+    val[i] = upd(val[i]);
+    if(i < s) {
+      prop[i] = prop[i] + upd;
+      dirty[i] = true;
+    }
+  }
+
+  void pull(ll i) {
+    for (ll l = i/2; l; l /= 2) {
+      T comb = val[2*l] * val[2*l+1];
+      val[l] = prop[l](comb);
+    }
+  }
+
+  void push(ll i) {
+    for (ll th = h; th > 0; th--) {
+      ll l = i >> th;
+
+      if (dirty[l]) {
+        apply(2*l, prop[l]);
+        apply(2*l+1, prop[l]);
+
+        prop[l] = noop;
+        dirty[l] = false;
+      }
+    }
+  }
+
+  void update(ll i, ll j, U upd) {
+    i += s, j += s;
+    push(i), push(j);
+
+    for (ll l = i, r = j; l <= r; l /= 2, r /= 2) {
+      if((l&1) == 1) apply(l++, upd);
+      if((r&1) == 0) apply(r--, upd);
+    }
+
+    pull(i), pull(j);
+  }
+
+  T query(ll i, ll j){
+    i += s, j += s;
+    push(i), push(j);
+
+    T rl = id, rr = id;
+    for(; i <= j; i /= 2, j /= 2){
+      if((i&1) == 1) rl = rl * val[i++];
+      if((j&1) == 0) rr = val[j--] * rr;
+    }
+    return rl * rr;
+  }
+};
+ 
 // Heavy Light Decomposition (Path query + Path update)
 //
 // Decomposes a tree into vertex disjoint heavy paths and light edges such that 
@@ -33,70 +160,15 @@ const ll INF = 0x3f3f3f3f3f3f3f3fll;
 //
 // complexity: O((log N)^2) per op, O(N) build
 
-// Segment Tree (Range Query + Range Update)
-//
-// Tree for range queries with a customizable combine; supports range updates and range queries.
-//
-// complexity: O(log N) per op, O(N) to build
-
-// Segment Tree (Range Query + Point Update)
-//
-//supports point updates and range queries.
-//
-// complexity: O(log N) per op, O(N)
-
-struct node {
-    ll val = 0;
-    
-    static node comb(const node& a, const node& b) {
-        return {max(a.val,b.val)};
-    }
-};
-
-template<typename T> struct segtree {
-  ll n;
-  T neutral;
-  vector<T> tree;
-
-  segtree(ll _n, T _neutral = T()) {
-    n = _n, neutral = _neutral;
-    tree.resize(2*n+1, neutral);
-  }
-
-  void set_leaves(vector<T> &leaves) {
-    copy(leaves.begin(), leaves.end(), tree.begin() + n);
-
-    for (ll i = n - 1; i > 0; i--) tree[i] = T::comb(tree[2 * i], tree[2 * i + 1]);
-  }
-
-  void update(ll i, T v) {
-    i += n;
-    tree[i] = v;
-    while (i > 1) {
-      i /= 2;
-      tree[i] = T::comb(tree[2 * i], tree[2 * i + 1]);
-    }
-  }
-
-  T query(ll i, ll j) {
-    T rl = neutral, rr = neutral;
-    for(i += n, j += n; i <= j; i /= 2, j /= 2){
-      if((i&1) == 1) rl = T::comb(rl, tree[i++]);
-      if((j&1) == 0) rr = T::comb(tree[j--], rr);
-    }
-    return T::comb(rl, rr);
-  }
-};
-
 template <bool VALS_EDGES> struct HLD {
     ll N, tim = 0;
     vector<v64> adj;
     v64 parent, siz, head, pos;
-    vector<node> vseg;
-    std::unique_ptr<segtree<node>> seg;
-    HLD(vector<v64> adj_, vector<node> vals)
+    vector<Node> vseg;
+    std::unique_ptr<segtree<Node, Update>> seg;
+    HLD(vector<v64>& adj_, v64& vals)
         : N(sz(adj_)), adj(adj_), parent(N, -1), siz(N, 1),
-          head(N),pos(N),vseg(vals){ dfsSz(0); dfsHld(0);
+          head(N),pos(N),vseg(N, {0}){ dfsSz(0); dfsHld(0);
             seg = make_unique<segtree<Node, Update>>(N);
             seg->set_leaves(vseg);
         }
@@ -125,28 +197,23 @@ template <bool VALS_EDGES> struct HLD {
         if (pos[u] > pos[v]) swap(u, v);
         op(pos[u] + VALS_EDGES, pos[v]);
     }
-    // void modifyPath(ll u, ll v, ll val) { 
-    //     process(u, v, [&](ll l, ll r) { 
-    //         seg->update(l, {val}); // Modify depending on problem 
-    //     });
-    // }
-    void modifyPoint(ll u, ll val) { 
+    void modifyPath(ll u, ll v, ll val) { 
         process(u, v, [&](ll l, ll r) { 
-            seg->update(l, {val}); // Modify depending on problem 
+            seg->update(l, r, {val}); // Modify depending on problem 
         });
     }
     ll queryPath(ll u, ll v) { // Modify depending on problem
         ll res = -INF;
         process(u, v, [&](ll l, ll r) {
-                res = max(res, seg->query(l, r).val);
+                res = max(res, seg->query(l, r).sum);
         });
         return res;
     }
     ll querySubtree(ll v) { // modifySubtree is similar
-        return seg->query(pos[v] + VALS_EDGES, pos[v] + siz[v] - 1).val;
+        return seg->query(pos[v] + VALS_EDGES, pos[v] + siz[v] - 1).sum;
     }
 };
-
+ 
 int main(){
     _;
     ll n, q;
@@ -154,8 +221,8 @@ int main(){
     vector<v64> g;
     g.resize(n);
  
-    vector<node> vals(n);
-    forn(i,0,n) cin >> vals[i].val;
+    v64 vals(n);
+    forn(i,0,n) cin >> vals[i];
     
     forn(i,1,n){
         ll a, b;
@@ -167,6 +234,9 @@ int main(){
  
     HLD<false> hld(g, vals);
     
+    forn(i,0,n){
+        hld.modifyPath(i,i, vals[i]);
+    }
     
     while(q--){
         ll t; cin >> t;
@@ -174,7 +244,7 @@ int main(){
             ll s, x;
             cin >> s >> x;
             s--;
-            hld.modifyPoint(s, x);
+            hld.modifyPath(s, s, x);
         }else{
             ll a, b; cin >> a >> b;
             a--; b--;

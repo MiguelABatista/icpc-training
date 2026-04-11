@@ -1,0 +1,132 @@
+#include <bits/stdc++.h>
+using namespace std;
+ 
+typedef long long ll;
+typedef pair<ll, ll> p64;
+typedef vector<ll> v64;
+ 
+#define forn(i, s, e) for (ll i = (s); i < (e); i++)
+#define sz(u) ((ll) u.size())
+#define ln "\n"
+ 
+#ifdef DEBUG
+#define trace(u) u
+#define _
+#else
+#define trace(u)
+#define _ ios::sync_with_stdio(0); cin.tie(0)
+#endif
+ 
+#define debug(u) trace(cout << #u " = " << u << ln)
+#define debugv(v) trace(cout << #v ": "; for (auto xx : v) cout << xx << " "; cout << ln)
+ 
+const ll INF = 0x3f3f3f3f3f3f3f3fll;
+ 
+// Modular Integer
+//
+// Fixed-modulus integer type with +, -, *, /, and exponentiation; modulo should be prime for division via Fermat.
+//
+// complexity: O(1) per arithmetic op (O(log E) for exponentiation), O(1)
+ 
+const ll MOD = 1'000'000'007;
+ 
+template<ll p> struct mod_int {
+    ll expo(ll b, ll e) {
+        ll ret = 1;
+        while (e) {
+            if (e % 2) ret = ret * b % p;
+            e /= 2, b = b * b % p;
+        }
+        return ret;
+    }
+    ll inv(ll b) { return expo(b, p-2); }
+ 
+    using m = mod_int;
+    ll v;
+    mod_int() : v(0) {}
+    mod_int(ll v_) {
+        if (v_ >= p || v_ <= -p) v_ %= p;
+        if (v_ < 0) v_ += p;
+        v = v_;
+    }
+    m& operator +=(const m& a) {
+        v += a.v;
+        if (v >= p) v -= p;
+        return *this;
+    }
+    m& operator -=(const m& a) {
+        v -= a.v;
+        if (v < 0) v += p;
+        return *this;
+    }
+    m& operator *=(const m& a) {
+        v = v * a.v % p;
+        return *this;
+    }
+    m& operator /=(const m& a) {
+        v = v * inv(a.v) % p;
+        return *this;
+    }
+    m operator -() const { return m(-v); }
+    m& operator ^=(ll e) {
+        if (e < 0) {
+            v = inv(v);
+            e = -e;
+        }
+        v = expo(v, e);
+        // possible optimization:
+        // careful with 0^0
+        // v = expo(v, e%(p-1)); 
+        return *this;
+    }
+    bool operator ==(const m& a) { return v == a.v; }
+    bool operator !=(const m& a) { return v != a.v; }
+ 
+    friend istream& operator >>(istream& in, m& a) {
+        ll val; in >> val;
+        a = m(val);
+        return in;
+    }
+    friend ostream& operator <<(ostream& out, m a) {
+        return out << a.v;
+    }
+    friend m operator +(m a, m b) { return a += b; }
+    friend m operator -(m a, m b) { return a -= b; }
+    friend m operator *(m a, m b) { return a *= b; }
+    friend m operator /(m a, m b) { return a /= b; }
+    friend m operator ^(m a, ll e) { return a ^= e; }
+};
+typedef mod_int<MOD> mint;
+ 
+const ll MAX = 1'000'005;
+vector<mint> fat;
+vector<mint> invfat;
+ 
+void prep(){
+    fat.reserve(MAX);
+    invfat.reserve(MAX);
+    fat[0] = invfat[0] = 1;
+    forn(i,1,MAX){
+        fat[i] = fat[i-1]*i;
+        invfat[i] = invfat[i-1]/((mint)i);
+    }
+}
+ 
+ 
+int main() {
+    _;
+    prep();
+
+    string s; cin >> s;
+    ll n = sz(s);
+
+    map<char, ll> f;
+    forn(i,0,n) f[s[i]]++;
+
+    mint dem = 1;
+    for(auto [k,v] : f){
+        dem *= fat[v];
+    }
+    cout << fat[n]/dem << ln;
+    return 0;
+}

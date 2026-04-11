@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Per base plots</title>
+    <style>
+        .galeria {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            padding: 20px;
+            flex-direction: column;
+        }
+        figure {
+            text-align: center;
+            margin: 0;
+            max-width: 1000px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="galeria">
+        <figure>
+            <img src="max_minimax/newgroups_normNone_metcosine_svd300_5k_max_ratio_vs_minimax_radius.png" alt="News20 dataset">
+            <figcaption>Ratio between the k-center cost of each method and that of minimax on the "News20_Cosine" dataset.</figcaption>
+        </figure>
+
+        <figure>
+            <img src="max_minimax/reuters_normNone_metcosine_svd300_5000_max_ratio_vs_minimax_radius.png" alt="Reuters dataset">
+            <figcaption>Ratio between the k-center cost of each method and that of minimax on the "Reuters_Cosine" dataset.</figcaption>
+        </figure>
+    </div>
+
+</body>
+</html>
