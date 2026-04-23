@@ -2,8 +2,8 @@
 using namespace std;
 
 typedef long long ll;
-typedef pair<ll, ll> pll;
-typedef vector<ll> vll;
+typedef pair<ll, ll> p64;
+typedef vector<ll> v64;
 
 #define forn(i, s, e) for (ll i = (s); i < (e); i++)
 #define sz(u) ((ll) u.size())
@@ -21,7 +21,20 @@ typedef vector<ll> vll;
 #define debugv(v) trace(cout << #v ": "; for (auto xx : v) cout << xx << " "; cout << ln)
 
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
-
+ 
+/**
+ * Description: Decomposes a tree into vertex disjoint heavy paths and light
+ * edges such that the path from any leaf to the root contains at most log(n)
+ * light edges. Code does additive modifications and max queries, but can
+ * support commutative tree modifications/queries on paths and subtrees.
+ * Takes as input the full adjacency list. VALS\_EDGES being true means that
+ * values are stored in the edges, as opposed to the nodes. All values
+ * initialized to the tree default. Root must be 0.
+ * Time: O((\log N)^2)
+ * Status: stress-tested against old HLD
+ */
+ 
+ 
 // Segment Tree (Range Query + Range Update)
 //
 // Tree for range queries with a customizable combine; supports range updates and range queries.
@@ -29,22 +42,28 @@ const ll INF = 0x3f3f3f3f3f3f3f3fll;
 // complexity: O(log N) per op, O(N) to build
 
 struct Node {
-    ll val;
-    Node operator*(const Node &o) const { return {max(val, o.val)}; }
+    ll sum, cnt;
+    Node operator*(const Node &o) const { return {sum + o.sum, cnt + o.cnt}; }
 };
 
 struct Update {
+    ll add = 0;
     optional<ll> set;
 
     Node operator()(const Node &n) const {
-        ll res = set.has_value() ? *set : n.val;
-        return {res};
+        ll res = set.has_value() ? *set * n.cnt : n.sum;
+        return {res + add * n.cnt, n.cnt};
     }
 
     Update operator+(const Update &o) const {
         Update res = *this;
         if (o.set.has_value()) {
             res.set = o.set;
+            res.add = 0;
+        }
+        if (o.add != 0) {
+            if (res.set.has_value()) *res.set += o.add;
+            else res.add += o.add;
         }
         return res;
     }
@@ -130,7 +149,7 @@ template<typename T, typename U> struct segtree {
     return rl * rr;
   }
 };
-
+ 
 // Heavy Light Decomposition (Path query + Path update)
 //
 // Decomposes a tree into vertex disjoint heavy paths and light edges such that 
@@ -141,14 +160,13 @@ template<typename T, typename U> struct segtree {
 //
 // complexity: O((log N)^2) per op, O(N) build
 
-
 template <bool VALS_EDGES> struct HLD {
     ll N, tim = 0;
-    vector<vll> adj;
-    vll parent, siz, head, pos;
+    vector<v64> adj;
+    v64 parent, siz, head, pos;
     vector<Node> vseg;
     std::unique_ptr<segtree<Node, Update>> seg;
-    HLD(vector<vll> adj_, vll vals)
+    HLD(vector<v64>& adj_, v64& vals)
         : N(sz(adj_)), adj(adj_), parent(N, -1), siz(N, 1),
           head(N),pos(N),vseg(N, {0}){ dfsSz(0); dfsHld(0);
             seg = make_unique<segtree<Node, Update>>(N);
@@ -187,12 +205,12 @@ template <bool VALS_EDGES> struct HLD {
     ll queryPath(ll u, ll v) { // Modify depending on problem
         ll res = -INF;
         process(u, v, [&](ll l, ll r) {
-                res = max(res, seg->query(l, r).val);
+                res = max(res, seg->query(l, r).sum);
         });
         return res;
     }
     ll querySubtree(ll v) { // modifySubtree is similar
-        return seg->query(pos[v] + VALS_EDGES, pos[v] + siz[v] - 1).val;
+        return seg->query(pos[v] + VALS_EDGES, pos[v] + siz[v] - 1).sum;
     }
 };
  
@@ -200,10 +218,10 @@ int main(){
     _;
     ll n, q;
     cin >> n >> q;
-    vector<vll> g;
+    vector<v64> g;
     g.resize(n);
  
-    vll vals(n);
+    v64 vals(n);
     forn(i,0,n) cin >> vals[i];
     
     forn(i,1,n){
@@ -230,7 +248,7 @@ int main(){
         }else{
             ll a, b; cin >> a >> b;
             a--; b--;
-            cout << hld.queryPath(a,b) << (q == 0 ? "" : " ");
+            cout << hld.queryPath(a,b) << " ";
         }
     }
     cout << ln;
