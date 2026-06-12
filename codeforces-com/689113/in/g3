@@ -1,0 +1,2 @@
+if foo == bar:
+    print("if foo == bar:")

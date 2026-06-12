@@ -1,0 +1,2 @@
+while ans != 'Hola!':
+    que_tal = input()
