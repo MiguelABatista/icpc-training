@@ -26,6 +26,23 @@ void solve(){
     ll n; cin >> n;
     vll vec(n);
     forn(i,0,n) cin >> vec[i];
+    vec.push_back(1);
+    vll prox(n);
+    prox[n-1] = n;
+    for(ll i = n-2; i>= 0; i--){
+        ll j = i+1;
+        while(j < n && vec[j]%vec[i] == 0) j = prox[j];
+        prox[i] = j;
+    }
+
+    ll resp = 0;    
+    forn(l,0,n-1){
+        ll curr = vec[l];
+        ll nxt = vec[prox[l]];
+        resp += min(curr - (nxt%curr), nxt%curr)*(n-prox[l]);
+    }
+
+    cout << resp << ln;
 }
 
 int main() {
