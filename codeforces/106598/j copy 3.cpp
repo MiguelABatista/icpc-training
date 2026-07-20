@@ -35,33 +35,26 @@ int main() {
         inv[l+r].push_back(r-l);
     }
     
-    forn(i,0,2*k+1) if(sz(inv[i]) >= 2) sort(inv[i].begin(), inv[i].end());
-
     ll resp = 0;
-
     forn(i,2,2*k-1){
         ll maxsize = min(i, 2*k-i);
 
-        vll esq;
-        ll pesq = 0;
-        vll dir;
-        ll pdir = 0;
-        vll cen;
-        ll pcen = 0;
-
+        map<ll, ll> esq;
+        map<ll, ll> dir;
+        map<ll, ll> cen;
         vll pts;
 
         for(auto v : inv[i-2]) if(v+2 <= maxsize){
             pts.push_back(v+2);
-            esq.push_back(v+2);
+            esq[v+2] = v;
         }
         for(auto v : inv[i]) if(v < maxsize){
             pts.push_back(v);
-            cen.push_back(v);
+            cen[v] = v;
         }
         for(auto v : inv[i+2]) if(v+2 <= maxsize){
             pts.push_back(v+2);
-            dir.push_back(v+2);
+            dir[v+2] = v;
         }
 
         
@@ -75,14 +68,11 @@ int main() {
         ll bcen = 0;
 
         forn(j,0,sz(pts)){
-            ll x = pts[j];
-            if(pesq < sz(esq) && x == esq[pesq]) besq = max(besq, esq[pesq++]-2);
-            if(pdir < sz(dir) && x == dir[pdir]) bdir = max(bdir, dir[pdir++]-2);
+            besq = max(besq, esq[pts[j]]);
+            bdir = max(bdir, dir[pts[j]]);
             debug(j);
             currresp += max(bcen, min(besq, bdir));
-             
-            if(pcen < sz(cen) && x == cen[pcen]) bcen = max(bcen, cen[pcen++]);
-
+            bcen = max(bcen, cen[pts[j]]);
             if(j < sz(pts)-1) currresp += max(bcen, min(besq, bdir))*((pts[j+1] - pts[j]-1)/2);
         }
 

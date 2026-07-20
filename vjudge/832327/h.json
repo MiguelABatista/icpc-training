@@ -1,0 +1,76 @@
+{
+    "heroes": [
+        {
+            "name": "Shadow",
+            "energy_cost": 4,
+            "power_level": 6,
+            "ability": null
+        },
+        {
+            "name": "Gale",
+            "energy_cost": 3,
+            "power_level": 5,
+            "ability": null
+        },
+        {
+            "name": "Ranger",
+            "energy_cost": 2,
+            "power_level": 4,
+            "ability": null
+        },
+        {
+            "name": "Anvil",
+            "energy_cost": 5,
+            "power_level": 7,
+            "ability": null
+        },
+        {
+            "name": "Vexia",
+            "energy_cost": 2,
+            "power_level": 3,
+            "ability": null
+        },
+        {
+            "name": "Guardian",
+            "energy_cost": 6,
+            "power_level": 8,
+            "ability": null
+        },
+        {
+            "name": "Thunderheart",
+            "energy_cost": 5,
+            "power_level": 6,
+            "ability": "Phalanx - If the location this card is played at has 4 friendly cards, including this one, then its power is doubled. Note that other buffs the card receives are not doubled."
+        },
+        {
+            "name": "Frostwhisper",
+            "energy_cost": 1,
+            "power_level": 2,
+            "ability": null
+        },
+        {
+            "name": "Voidclaw",
+            "energy_cost": 1,
+            "power_level": 3,
+            "ability": null
+        },
+        {
+            "name": "Ironwood",
+            "energy_cost": 1,
+            "power_level": 3,
+            "ability": null
+        },
+        {
+            "name": "Zenith",
+            "energy_cost": 6,
+            "power_level": 4,
+            "ability": "Centered Focus - If this card is played at the center location, +5 power."
+        },
+        {
+            "name": "Seraphina",
+            "energy_cost": 1,
+            "power_level": 1,
+            "ability": "Celestial Healing - Seraphina grants +1 power to each friendly card at this location, other than itself. This includes other Seraphina cards."
+        }
+    ]
+}

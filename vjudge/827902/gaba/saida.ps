@@ -1,0 +1,1257 @@
+%!PS-Adobe-3.0
+%%BoundingBox: 18 36 577 806
+%%Title: Enscript Output
+%%Creator: GNU Enscript 1.6.5.90
+%%CreationDate: Fri Jul  3 09:52:45 2026
+%%Orientation: Portrait
+%%Pages: (atend)
+%%DocumentMedia: A4 595 842 0 () ()
+%%DocumentNeededResources: (atend)
+%%EndComments
+%%BeginProlog
+%%BeginResource: procset Enscript-Prolog 1.6.5 90
+%
+% Procedures.
+%
+
+/_S {	% save current state
+  /_s save def
+} def
+/_R {	% restore from saved state
+  _s restore
+} def
+
+/S {	% showpage protecting gstate
+  gsave
+  showpage
+  grestore
+} bind def
+
+/MF {	% fontname newfontname -> -	make a new encoded font
+  /newfontname exch def
+  /fontname exch def
+
+  /fontdict fontname findfont def
+  /newfont fontdict maxlength dict def
+
+  fontdict {
+    exch
+    dup /FID eq {
+      % skip FID pair
+      pop pop
+    } {
+      % copy to the new font dictionary
+      exch newfont 3 1 roll put
+    } ifelse
+  } forall
+
+  newfont /FontName newfontname put
+
+  % insert only valid encoding vectors
+  encoding_vector length 256 eq {
+    newfont /Encoding encoding_vector put
+  } if
+
+  newfontname newfont definefont pop
+} def
+
+/MF_PS { % fontname newfontname -> -	make a new font preserving its enc
+  /newfontname exch def
+  /fontname exch def
+
+  /fontdict fontname findfont def
+  /newfont fontdict maxlength dict def
+
+  fontdict {
+    exch
+    dup /FID eq {
+      % skip FID pair
+      pop pop
+    } {
+      % copy to the new font dictionary
+      exch newfont 3 1 roll put
+    } ifelse
+  } forall
+
+  newfont /FontName newfontname put
+
+  newfontname newfont definefont pop
+} def
+
+/SF { % fontname width height -> -	set a new font
+  /height exch def
+  /width exch def
+
+  findfont
+  [width 0 0 height 0 0] makefont setfont
+} def
+
+/SUF { % fontname width height -> -	set a new user font
+  /height exch def
+  /width exch def
+
+  /F-gs-user-font MF
+  /F-gs-user-font width height SF
+} def
+
+/SUF_PS { % fontname width height -> -	set a new user font preserving its enc
+  /height exch def
+  /width exch def
+
+  /F-gs-user-font MF_PS
+  /F-gs-user-font width height SF
+} def
+
+/M {moveto} bind def
+/s {show} bind def
+
+/Box {	% x y w h -> -			define box path
+  /d_h exch def /d_w exch def /d_y exch def /d_x exch def
+  d_x d_y  moveto
+  d_w 0 rlineto
+  0 d_h rlineto
+  d_w neg 0 rlineto
+  closepath
+} def
+
+/bgs {	% x y height blskip gray str -> -	show string with bg color
+  /str exch def
+  /gray exch def
+  /blskip exch def
+  /height exch def
+  /y exch def
+  /x exch def
+
+  gsave
+    x y blskip sub str stringwidth pop height Box
+    gray setgray
+    fill
+  grestore
+  x y M str s
+} def
+
+/bgcs { % x y height blskip red green blue str -> -  show string with bg color
+  /str exch def
+  /blue exch def
+  /green exch def
+  /red exch def
+  /blskip exch def
+  /height exch def
+  /y exch def
+  /x exch def
+
+  gsave
+    x y blskip sub str stringwidth pop height Box
+    red green blue setrgbcolor
+    fill
+  grestore
+  x y M str s
+} def
+
+% Highlight bars.
+/highlight_bars {	% nlines lineheight output_y_margin gray -> -
+  gsave
+    setgray
+    /ymarg exch def
+    /lineheight exch def
+    /nlines exch def
+
+    % This 2 is just a magic number to sync highlight lines to text.
+    0 d_header_y ymarg sub 2 sub translate
+
+    /cw d_output_w cols div def
+    /nrows d_output_h ymarg 2 mul sub lineheight div cvi def
+
+    % for each column
+    0 1 cols 1 sub {
+      cw mul /xp exch def
+
+      % for each rows
+      0 1 nrows 1 sub {
+        /rn exch def
+        rn lineheight mul neg /yp exch def
+        rn nlines idiv 2 mod 0 eq {
+	  % Draw highlight bar.  4 is just a magic indentation.
+	  xp 4 add yp cw 8 sub lineheight neg Box fill
+	} if
+      } for
+    } for
+
+  grestore
+} def
+
+% Line highlight bar.
+/line_highlight {	% x y width height gray -> -
+  gsave
+    /gray exch def
+    Box gray setgray fill
+  grestore
+} def
+
+% Column separator lines.
+/column_lines {
+  gsave
+    .1 setlinewidth
+    0 d_footer_h translate
+    /cw d_output_w cols div def
+    1 1 cols 1 sub {
+      cw mul 0 moveto
+      0 d_output_h rlineto stroke
+    } for
+  grestore
+} def
+
+% Column borders.
+/column_borders {
+  gsave
+    .1 setlinewidth
+    0 d_footer_h moveto
+    0 d_output_h rlineto
+    d_output_w 0 rlineto
+    0 d_output_h neg rlineto
+    closepath stroke
+  grestore
+} def
+
+% Do the actual underlay drawing
+/draw_underlay {
+  ul_style 0 eq {
+    ul_str true charpath stroke
+  } {
+    ul_str show
+  } ifelse
+} def
+
+% Underlay
+/underlay {	% - -> -
+  gsave
+    0 d_page_h translate
+    d_page_h neg d_page_w atan rotate
+
+    ul_gray setgray
+    ul_font setfont
+    /dw d_page_h dup mul d_page_w dup mul add sqrt def
+    ul_str stringwidth pop dw exch sub 2 div ul_h_ptsize -2 div moveto
+    draw_underlay
+  grestore
+} def
+
+/user_underlay {	% - -> -
+  gsave
+    ul_x ul_y translate
+    ul_angle rotate
+    ul_gray setgray
+    ul_font setfont
+    0 0 ul_h_ptsize 2 div sub moveto
+    draw_underlay
+  grestore
+} def
+
+% Page prefeed
+/page_prefeed {		% bool -> -
+  statusdict /prefeed known {
+    statusdict exch /prefeed exch put
+  } {
+    pop
+  } ifelse
+} def
+
+% Wrapped line markers
+/wrapped_line_mark {	% x y charwith charheight type -> -
+  /type exch def
+  /h exch def
+  /w exch def
+  /y exch def
+  /x exch def
+
+  type 2 eq {
+    % Black boxes (like TeX does)
+    gsave
+      0 setlinewidth
+      x w 4 div add y M
+      0 h rlineto w 2 div 0 rlineto 0 h neg rlineto
+      closepath fill
+    grestore
+  } {
+    type 3 eq {
+      % Small arrows
+      gsave
+        .2 setlinewidth
+        x w 2 div add y h 2 div add M
+        w 4 div 0 rlineto
+        x w 4 div add y lineto stroke
+
+        x w 4 div add w 8 div add y h 4 div add M
+        x w 4 div add y lineto
+	w 4 div h 8 div rlineto stroke
+      grestore
+    } {
+      % do nothing
+    } ifelse
+  } ifelse
+} def
+
+% EPSF import.
+
+/BeginEPSF {
+  /b4_Inc_state save def    		% Save state for cleanup
+  /dict_count countdictstack def	% Count objects on dict stack
+  /op_count count 1 sub def		% Count objects on operand stack
+  userdict begin
+  /showpage { } def
+  0 setgray 0 setlinecap
+  1 setlinewidth 0 setlinejoin
+  10 setmiterlimit [ ] 0 setdash newpath
+  /languagelevel where {
+    pop languagelevel
+    1 ne {
+      false setstrokeadjust false setoverprint
+    } if
+  } if
+} bind def
+
+/EndEPSF {
+  count op_count sub { pos } repeat	% Clean up stacks
+  countdictstack dict_count sub { end } repeat
+  b4_Inc_state restore
+} bind def
+
+% Check PostScript language level.
+/languagelevel where {
+  pop /gs_languagelevel languagelevel def
+} {
+  /gs_languagelevel 1 def
+} ifelse
+%%EndResource
+%%BeginResource: procset Enscript-Encoding-88591 1.6.5 90
+/encoding_vector [
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/space        	/exclam       	/quotedbl     	/numbersign   	
+/dollar       	/percent      	/ampersand    	/quoteright   	
+/parenleft    	/parenright   	/asterisk     	/plus         	
+/comma        	/hyphen       	/period       	/slash        	
+/zero         	/one          	/two          	/three        	
+/four         	/five         	/six          	/seven        	
+/eight        	/nine         	/colon        	/semicolon    	
+/less         	/equal        	/greater      	/question     	
+/at           	/A            	/B            	/C            	
+/D            	/E            	/F            	/G            	
+/H            	/I            	/J            	/K            	
+/L            	/M            	/N            	/O            	
+/P            	/Q            	/R            	/S            	
+/T            	/U            	/V            	/W            	
+/X            	/Y            	/Z            	/bracketleft  	
+/backslash    	/bracketright 	/asciicircum  	/underscore   	
+/quoteleft    	/a            	/b            	/c            	
+/d            	/e            	/f            	/g            	
+/h            	/i            	/j            	/k            	
+/l            	/m            	/n            	/o            	
+/p            	/q            	/r            	/s            	
+/t            	/u            	/v            	/w            	
+/x            	/y            	/z            	/braceleft    	
+/bar          	/braceright   	/tilde        	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/space        	/exclamdown   	/cent         	/sterling     	
+/currency     	/yen          	/brokenbar    	/section      	
+/dieresis     	/copyright    	/ordfeminine  	/guillemotleft	
+/logicalnot   	/hyphen       	/registered   	/macron       	
+/degree       	/plusminus    	/twosuperior  	/threesuperior	
+/acute        	/mu           	/paragraph    	/bullet       	
+/cedilla      	/onesuperior  	/ordmasculine 	/guillemotright	
+/onequarter   	/onehalf      	/threequarters	/questiondown 	
+/Agrave       	/Aacute       	/Acircumflex  	/Atilde       	
+/Adieresis    	/Aring        	/AE           	/Ccedilla     	
+/Egrave       	/Eacute       	/Ecircumflex  	/Edieresis    	
+/Igrave       	/Iacute       	/Icircumflex  	/Idieresis    	
+/Eth          	/Ntilde       	/Ograve       	/Oacute       	
+/Ocircumflex  	/Otilde       	/Odieresis    	/multiply     	
+/Oslash       	/Ugrave       	/Uacute       	/Ucircumflex  	
+/Udieresis    	/Yacute       	/Thorn        	/germandbls   	
+/agrave       	/aacute       	/acircumflex  	/atilde       	
+/adieresis    	/aring        	/ae           	/ccedilla     	
+/egrave       	/eacute       	/ecircumflex  	/edieresis    	
+/igrave       	/iacute       	/icircumflex  	/idieresis    	
+/eth          	/ntilde       	/ograve       	/oacute       	
+/ocircumflex  	/otilde       	/odieresis    	/divide       	
+/oslash       	/ugrave       	/uacute       	/ucircumflex  	
+/udieresis    	/yacute       	/thorn        	/ydieresis    	
+] def
+%%EndResource
+%%EndProlog
+%%BeginSetup
+%%IncludeResource: font Courier-Bold
+%%IncludeResource: font Courier
+/HFpt_w 10 def
+/HFpt_h 10 def
+/Courier-Bold /HF-gs-font MF
+/HF /HF-gs-font findfont [HFpt_w 0 0 HFpt_h 0 0] makefont def
+/Courier /F-gs-font MF
+/F-gs-font 8 8 SF
+/#copies 1 def
+% Pagedevice definitions:
+gs_languagelevel 1 gt {
+  <<
+    /PageSize [595 842] 
+  >> setpagedevice
+} if
+%%BeginResource: procset Enscript-Header-simple 1.6.5 90
+
+/do_header {	% print default simple header
+  gsave
+    d_header_x d_header_y HFpt_h 3 div add translate
+
+    HF setfont
+    user_header_p {
+      5 0 moveto user_header_left_str show
+
+      d_header_w user_header_center_str stringwidth pop sub 2 div
+      0 moveto user_header_center_str show
+
+      d_header_w user_header_right_str stringwidth pop sub 5 sub
+      0 moveto user_header_right_str show
+    } {
+      5 0 moveto fname show
+      45 0 rmoveto fmodstr show
+      45 0 rmoveto pagenumstr show
+    } ifelse
+
+  grestore
+} def
+%%EndResource
+/d_page_w 559 def
+/d_page_h 770 def
+/d_header_x 0 def
+/d_header_y 755 def
+/d_header_w 559 def
+/d_header_h 15 def
+/d_footer_x 0 def
+/d_footer_y 0 def
+/d_footer_w 559 def
+/d_footer_h 0 def
+/d_output_w 559 def
+/d_output_h 755 def
+/cols 1 def
+%%EndSetup
+%%Page: (1) 1
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 1 def
+/fname (a.cpp) def
+/fdir (.) def
+/ftail (a.cpp) def
+% User defined strings:
+/fmodstr (Fri Jul 03 09:40:05 2026) def
+/pagenumstr (1) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+5 744 M
+(#include <bits/stdc++.h>) s
+5 735 M
+(using namespace std;) s
+5 726 M
+( ) s
+5 717 M
+(typedef long long ll;) s
+5 708 M
+(typedef pair<ll, ll> pll;) s
+5 699 M
+(typedef vector<ll> vll;) s
+5 690 M
+( ) s
+5 681 M
+(#define forn\(i, s, e\) for \(ll i = \(s\); i < \(e\); i++\)) s
+5 672 M
+(#define sz\(u\) \(\(ll\) u.size\(\)\)) s
+5 663 M
+(#define ln "\\n") s
+5 654 M
+( ) s
+5 645 M
+(#ifdef DEBUG) s
+5 636 M
+(#define trace\(u\) u) s
+5 627 M
+(#define _) s
+5 618 M
+(#else) s
+5 609 M
+(#define trace\(u\)) s
+5 600 M
+(#define _ ios::sync_with_stdio\(0\); cin.tie\(0\)) s
+5 591 M
+(#endif) s
+5 582 M
+( ) s
+5 573 M
+(#define debug\(u\) trace\(cout << #u " = " << u << ln\)) s
+5 564 M
+(#define debugv\(v\) trace\(cout << #v ": "; for \(auto xx : v\) cout << xx << " "; cout << ln\)) s
+5 555 M
+( ) s
+5 546 M
+(const ll INF = 0x3f3f3f3f3f3f3f3fll;) s
+5 537 M
+( ) s
+5 528 M
+(// Segment Tree \(Range Query + Range Update\)) s
+5 519 M
+(//) s
+5 510 M
+(// Tree for range queries with a customizable combine; supports range updates and range queries.) s
+5 501 M
+(//) s
+5 492 M
+(// complexity: O\(log N\) per op, O\(N\) to build) s
+5 483 M
+( ) s
+5 474 M
+(struct Node {) s
+5 465 M
+(    ll sum, cnt = 1;) s
+5 456 M
+(    Node operator*\(const Node &o\) const { return {sum + o.sum, cnt + o.cnt}; }) s
+5 447 M
+(};) s
+5 438 M
+( ) s
+5 429 M
+(struct Update {) s
+5 420 M
+(    ll add = 0;) s
+5 411 M
+( ) s
+5 402 M
+(    Node operator\(\)\(const Node &n\) const {) s
+5 393 M
+(        return {n.sum + add * n.cnt, n.cnt};) s
+5 384 M
+(    }) s
+5 375 M
+( ) s
+5 366 M
+(    Update operator+\(const Update &o\) const {) s
+5 357 M
+(        Update res = *this;) s
+5 348 M
+(        res.add += o.add;) s
+5 339 M
+(        return res;) s
+5 330 M
+(    }) s
+5 321 M
+(};) s
+5 303 M
+(template<typename T, typename U> struct segtree {) s
+5 294 M
+(  ll s, h;) s
+5 276 M
+(  T id;) s
+5 267 M
+(  vector<T> val;) s
+5 249 M
+(  U noop;) s
+5 240 M
+(  vector<bool> dirty;) s
+5 231 M
+(  vector<U> prop;) s
+5 213 M
+(  segtree\(ll ts, T tid = T\(\), U tnoop = U\(\)\) {) s
+5 204 M
+(    id = tid, noop = tnoop;) s
+5 195 M
+(    for \(s = 1, h = 1; s < ts; \) s *= 2, h++;) s
+5 177 M
+(    val.assign\(2*s, id\);) s
+5 168 M
+(    dirty.assign\(2*s, false\);) s
+5 159 M
+(    prop.assign\(2*s, noop\);) s
+5 150 M
+(  }) s
+5 132 M
+(  void set_leaves\(vector<T> &lvs\) {) s
+5 123 M
+(    copy\(lvs.begin\(\), lvs.end\(\), val.begin\(\) + s\);) s
+5 105 M
+(    for \(ll i = s - 1; i > 0; i--\) val[i] = val[2 * i] * val[2 * i + 1];) s
+5 96 M
+(    dirty.assign\(2*s, false\);) s
+5 87 M
+(    prop.assign\(2*s, noop\);) s
+5 78 M
+(  }) s
+5 60 M
+(  void apply\(ll i, U &upd\) {) s
+5 51 M
+(    val[i] = upd\(val[i]\);) s
+5 42 M
+(    if\(i < s\) {) s
+5 33 M
+(      prop[i] = prop[i] + upd;) s
+5 24 M
+(      dirty[i] = true;) s
+5 15 M
+(    }) s
+5 6 M
+(  }) s
+_R
+S
+%%Page: (2) 2
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 2 def
+/fname (a.cpp) def
+/fdir (.) def
+/ftail (a.cpp) def
+% User defined strings:
+/fmodstr (Fri Jul 03 09:40:05 2026) def
+/pagenumstr (2) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+5 735 M
+(  void pull\(ll i\) {) s
+5 726 M
+(    for \(ll l = i/2; l; l /= 2\) {) s
+5 717 M
+(      T comb = val[2*l] * val[2*l+1];) s
+5 708 M
+(      val[l] = prop[l]\(comb\);) s
+5 699 M
+(    }) s
+5 690 M
+(  }) s
+5 672 M
+(  void push\(ll i\) {) s
+5 663 M
+(    for \(ll th = h; th > 0; th--\) {) s
+5 654 M
+(      ll l = i >> th;) s
+5 636 M
+(      if \(dirty[l]\) {) s
+5 627 M
+(        apply\(2*l, prop[l]\);) s
+5 618 M
+(        apply\(2*l+1, prop[l]\);) s
+5 600 M
+(        prop[l] = noop;) s
+5 591 M
+(        dirty[l] = false;) s
+5 582 M
+(      }) s
+5 573 M
+(    }) s
+5 564 M
+(  }) s
+5 546 M
+(  void update\(ll i, ll j, U upd\) {) s
+5 537 M
+(    i += s, j += s;) s
+5 528 M
+(    push\(i\), push\(j\);) s
+5 510 M
+(    for \(ll l = i, r = j; l <= r; l /= 2, r /= 2\) {) s
+5 501 M
+(      if\(\(l&1\) == 1\) apply\(l++, upd\);) s
+5 492 M
+(      if\(\(r&1\) == 0\) apply\(r--, upd\);) s
+5 483 M
+(    }) s
+5 465 M
+(    pull\(i\), pull\(j\);) s
+5 456 M
+(  }) s
+5 438 M
+(  T query\(ll i, ll j\){) s
+5 429 M
+(    i += s, j += s;) s
+5 420 M
+(    push\(i\), push\(j\);) s
+5 402 M
+(    T rl = id, rr = id;) s
+5 393 M
+(    for\(; i <= j; i /= 2, j /= 2\){) s
+5 384 M
+(      if\(\(i&1\) == 1\) rl = rl * val[i++];) s
+5 375 M
+(      if\(\(j&1\) == 0\) rr = val[j--] * rr;) s
+5 366 M
+(    }) s
+5 357 M
+(    return rl * rr;) s
+5 348 M
+(  }) s
+5 339 M
+(};) s
+5 330 M
+( ) s
+5 321 M
+(int main\(\) {) s
+5 312 M
+(    _;) s
+5 303 M
+(    ll n, q; cin >> n >> q;) s
+5 294 M
+(    vector<Node> vec\(n\);) s
+5 285 M
+(    forn\(i,0,n\) cin >> vec[i].sum;) s
+5 276 M
+( ) s
+5 267 M
+(    segtree<Node, Update> seg\(n\);) s
+5 258 M
+(    seg.set_leaves\(vec\);) s
+5 249 M
+( ) s
+5 240 M
+(    while \(q--\){) s
+5 231 M
+(        ll t;) s
+5 222 M
+(        cin >> t;) s
+5 213 M
+(        if\(t == 1\){) s
+5 204 M
+(            ll a, b, u; cin >> a >> b >> u;) s
+5 195 M
+(            a--, b--;) s
+5 186 M
+(            seg.update\(a,b,{u}\);) s
+5 177 M
+(        }else{) s
+5 168 M
+(            ll k; cin >> k;) s
+5 159 M
+(            k--;) s
+5 150 M
+(            cout << seg.query\(k,k\).sum << ln;) s
+5 141 M
+(        }) s
+5 132 M
+(    }) s
+5 123 M
+(    ) s
+5 114 M
+(    return 0;) s
+5 105 M
+(}) s
+_R
+S
+%%Page: (1) 3
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 1 def
+/fname (b.cpp) def
+/fdir (.) def
+/ftail (b.cpp) def
+% User defined strings:
+/fmodstr (Fri Jul 03 09:41:12 2026) def
+/pagenumstr (1) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+5 744 M
+(#include <bits/stdc++.h>) s
+5 735 M
+(using namespace std;) s
+5 726 M
+( ) s
+5 717 M
+(typedef long long ll;) s
+5 708 M
+(typedef pair<ll, ll> pll;) s
+5 699 M
+(typedef vector<ll> vll;) s
+5 690 M
+( ) s
+5 681 M
+(#define forn\(i, s, e\) for \(ll i = \(s\); i < \(e\); i++\)) s
+5 672 M
+(#define sz\(u\) \(\(ll\) u.size\(\)\)) s
+5 663 M
+(#define ln "\\n") s
+5 654 M
+( ) s
+5 645 M
+(#ifdef DEBUG) s
+5 636 M
+(#define trace\(u\) u) s
+5 627 M
+(#define _) s
+5 618 M
+(#else) s
+5 609 M
+(#define trace\(u\)) s
+5 600 M
+(#define _ ios::sync_with_stdio\(0\); cin.tie\(0\)) s
+5 591 M
+(#endif) s
+5 582 M
+( ) s
+5 573 M
+(#define debug\(u\) trace\(cout << #u " = " << u << ln\)) s
+5 564 M
+(#define debugv\(v\) trace\(cout << #v ": "; for \(auto xx : v\) cout << xx << " "; cout << ln\)) s
+5 555 M
+( ) s
+5 546 M
+(const ll INF = 0x3f3f3f3f3f3f3f3fll;) s
+5 537 M
+( ) s
+5 528 M
+( ) s
+5 519 M
+(// Dinic's Maximum Flow \(with Scaling\)) s
+5 510 M
+(//) s
+5 501 M
+(// Computes max flow using Dinic's algorithm with optional capacity scaling to speed up BFS levels.) s
+5 492 M
+(//) s
+5 483 M
+(// complexity: O\(E V^2\) worst-case, O\(E\)) s
+5 474 M
+( ) s
+5 465 M
+(struct dinitz {) s
+5 456 M
+(    const bool scaling;) s
+5 447 M
+(    ll lim;) s
+5 438 M
+(    struct edge {) s
+5 429 M
+(        ll to, cap, rev, flow;) s
+5 420 M
+(        bool res;) s
+5 411 M
+(        edge\(ll to_, ll cap_, ll rev_, bool res_\)) s
+5 402 M
+(            : to\(to_\), cap\(cap_\), rev\(rev_\), flow\(0\), res\(res_\) {}) s
+5 393 M
+(    };) s
+5 384 M
+( ) s
+5 375 M
+(    vector<vector<edge>> g;) s
+5 366 M
+(    vll lev, beg;) s
+5 357 M
+(    ll F;) s
+5 348 M
+(    dinitz\(ll n, bool scaling_\) : scaling\(scaling_\), g\(n\), F\(0\){}) s
+5 339 M
+( ) s
+5 330 M
+(    void add\(ll a, ll b, ll c\) {) s
+5 321 M
+(        g[a].emplace_back\(b, c, sz\(g[b]\), false\);) s
+5 312 M
+(        g[b].emplace_back\(a, 0, sz\(g[a]\)-1, true\);) s
+5 303 M
+(    }) s
+5 294 M
+( ) s
+5 285 M
+(    bool bfs\(ll s, ll t\) {) s
+5 276 M
+(        lev = vll\(sz\(g\), -1\); lev[s] = 0;) s
+5 267 M
+(        beg = vll\(sz\(g\), 0\);) s
+5 258 M
+(        queue<ll> q; q.push\(s\);) s
+5 249 M
+(        while \(sz\(q\)\) {) s
+5 240 M
+(            ll u = q.front\(\); q.pop\(\);) s
+5 231 M
+(            for \(auto& i : g[u]\) {) s
+5 222 M
+(                if \(lev[i.to] != -1 || \(i.flow == i.cap\)\) continue;) s
+5 213 M
+(                if \(scaling && i.cap - i.flow < lim\) continue;) s
+5 204 M
+(                lev[i.to] = lev[u] + 1;) s
+5 195 M
+(                q.push\(i.to\);) s
+5 186 M
+(            }) s
+5 177 M
+(        }) s
+5 168 M
+(        return lev[t] != -1;) s
+5 159 M
+(    }) s
+5 150 M
+( ) s
+5 141 M
+(    ll dfs\(ll v, ll t, ll f = INF\) {) s
+5 132 M
+(        if \(!f || v == t\) return f;) s
+5 123 M
+(        for \(ll& i = beg[v]; i < sz\(g[v]\); i++\) {) s
+5 114 M
+(            auto& e = g[v][i];) s
+5 105 M
+(            if \(lev[e.to] != lev[v] + 1\) continue;) s
+5 96 M
+(            ll foi = dfs\(e.to, t, min\(f, e.cap - e.flow\)\);) s
+5 87 M
+(            if \(!foi\) continue;) s
+5 78 M
+(            e.flow += foi, g[e.to][e.rev].flow -= foi;) s
+5 69 M
+(            return foi;) s
+5 60 M
+(        }) s
+5 51 M
+(        return 0;) s
+5 42 M
+(    }) s
+5 33 M
+( ) s
+5 24 M
+(    ll max_flow\(ll s, ll t\) {) s
+5 15 M
+(        for \(lim = scaling ? \(1ll<<30\) : 1; lim; lim /= 2\)) s
+5 6 M
+(            while \(bfs\(s, t\)\) while \(ll ff = dfs\(s, t\)\) F += ff;) s
+_R
+S
+%%Page: (2) 4
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 2 def
+/fname (b.cpp) def
+/fdir (.) def
+/ftail (b.cpp) def
+% User defined strings:
+/fmodstr (Fri Jul 03 09:41:12 2026) def
+/pagenumstr (2) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+5 744 M
+(        return F;) s
+5 735 M
+(    }) s
+5 726 M
+( ) s
+5 717 M
+(    vector<pll> min_cut\(\) {) s
+5 708 M
+(        vector<pll> cut;) s
+5 699 M
+(        forn\(u, 0, sz\(g\)\)) s
+5 690 M
+(            if \(lev[u] != -1\)) s
+5 681 M
+(                for \(auto& e : g[u]\)) s
+5 672 M
+(                    if \(lev[e.to] == -1 && !e.res\)) s
+5 663 M
+(                        cut.push_back\({u, e.to}\);) s
+5 654 M
+(        return cut;) s
+5 645 M
+(    }) s
+5 636 M
+( ) s
+5 627 M
+(    void reset\(\) {) s
+5 618 M
+(        F = 0;) s
+5 609 M
+(        for \(auto& edges : g\) for \(auto& e : edges\) e.flow = 0; ) s
+5 600 M
+(    }) s
+5 591 M
+(};) s
+5 582 M
+( ) s
+5 573 M
+( ) s
+5 564 M
+(int main\(\) {) s
+5 555 M
+(    _;) s
+5 546 M
+(    ll n, m; cin >> n >> m;) s
+5 537 M
+(    ) s
+5 528 M
+(    dinitz fluxo\(n, true\);) s
+5 519 M
+( ) s
+5 510 M
+(    forn\(i,0,m\){) s
+5 501 M
+(        ll a, b;) s
+5 492 M
+(        cin >> a >> b;) s
+5 483 M
+(        a--,b--;) s
+5 474 M
+(        fluxo.add\(a,b,1\);) s
+5 465 M
+(    }) s
+5 456 M
+( ) s
+5 447 M
+(    ll k = fluxo.max_flow\(0, n-1\);) s
+5 438 M
+(    vector<vll> g\(n\);) s
+5 429 M
+(    auto gf = fluxo.g;) s
+5 420 M
+(    forn\(i,0,n\){) s
+5 411 M
+(        for\(auto [to, cap, rev, flow, res] : gf[i]\){) s
+5 402 M
+(            if\(res\) continue;) s
+5 393 M
+(            if\(flow == 0\) continue;) s
+5 384 M
+(            g[i].push_back\(to\);) s
+5 375 M
+(        }) s
+5 366 M
+(    }) s
+5 357 M
+( ) s
+5 348 M
+(    cout << k << ln;) s
+5 339 M
+(    vll resp;) s
+5 330 M
+(    for\(ll v: g[0]\){) s
+5 321 M
+(        resp.push_back\(0\);) s
+5 312 M
+(        resp.push_back\(v\);) s
+5 303 M
+(        while\(v != n-1\){) s
+5 294 M
+( ) s
+5 285 M
+(            ll nv = g[v].back\(\);) s
+5 276 M
+(            g[v].pop_back\(\);) s
+5 267 M
+(            v = nv;) s
+5 258 M
+(            resp.push_back\(v\);) s
+5 249 M
+(        }) s
+5 240 M
+(        cout << sz\(resp\) << ln;) s
+5 231 M
+(        forn\(i,0,sz\(resp\)\) cout << resp[i]+1 << " \\n"[i == sz\(resp\)-1];) s
+5 222 M
+(        resp.clear\(\);) s
+5 213 M
+(    }) s
+5 204 M
+( ) s
+5 195 M
+(    return 0;) s
+5 186 M
+(}) s
+_R
+S
+%%Page: (1) 5
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 1 def
+/fname (c.cpp) def
+/fdir (.) def
+/ftail (c.cpp) def
+% User defined strings:
+/fmodstr (Fri Jul 03 09:45:04 2026) def
+/pagenumstr (1) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+5 744 M
+(#include <bits/stdc++.h>) s
+5 735 M
+(using namespace std;) s
+5 726 M
+( ) s
+5 717 M
+(typedef long long ll;) s
+5 708 M
+(typedef pair<ll, ll> pll; ) s
+5 699 M
+(typedef vector<ll> vll;) s
+5 690 M
+( ) s
+5 681 M
+(#define forn\(i, s, e\) for\(ll i = \(s\); i < \(e\); i++\)) s
+5 672 M
+(#define sz\(x\) \(\(ll\) x.size\(\)\)) s
+5 663 M
+(#define ln "\\n") s
+5 654 M
+( ) s
+5 645 M
+(#ifdef DEBUG) s
+5 636 M
+(    #define trace\(x\) x) s
+5 627 M
+(    #define _ \(void\)0) s
+5 618 M
+(#else) s
+5 609 M
+(    #define trace\(x\) \(void\)0) s
+5 600 M
+(    #define _ ios_base::sync_with_stdio\(false\), cin.tie\(NULL\)) s
+5 591 M
+(#endif) s
+5 582 M
+( ) s
+5 573 M
+(#define debugv\(v\) trace\({cout << #v": "; for \(auto x : v\) cout<< x << " "; cout << ln;}\)) s
+5 564 M
+(#define debug\(x\) trace\(cout << __LINE__ << ": " #x " = " << x << ln\)) s
+5 555 M
+( ) s
+5 546 M
+(const ll INF = 0x3f3f3f3f3f3f3f3fll;) s
+5 537 M
+( ) s
+5 528 M
+(// Hungarian algorithm \342\\200\\224 min-cost perfect matching) s
+5 519 M
+(// a[i][j] = cost of assigning worker i to job j \(n workers, m >= n jobs\)) s
+5 510 M
+(// Returns {min cost, assignment}: assignment[i] = j) s
+5 501 M
+(pair<ll, vll> hungarian\(const vector<vll> &a\) {) s
+5 492 M
+(        if \(a.empty\(\)\) return {0, {}};) s
+5 483 M
+(        ll n = sz\(a\) + 1, m = sz\(a[0]\) + 1;) s
+5 474 M
+(        vll u\(n\), v\(m\), p\(m\), ans\(n - 1\);) s
+5 465 M
+(        forn\(i, 1, n\) {) s
+5 456 M
+(                p[0] = i;) s
+5 447 M
+(                ll j0 = 0; // "dummy" worker 0) s
+5 438 M
+(                vll dist\(m, INF\), pre\(m, -1\);) s
+5 429 M
+(                vector<bool> done\(m + 1\);) s
+5 420 M
+(                do { // dijkstra) s
+5 411 M
+(                        done[j0] = true;) s
+5 402 M
+(                        ll i0 = p[j0], j1 = 0, delta = INF;) s
+5 393 M
+(                        forn\(j, 1, m\) if \(!done[j]\) {) s
+5 384 M
+(                                auto cur = a[i0 - 1][j - 1] - u[i0] - v[j];) s
+5 375 M
+(                                if \(cur < dist[j]\) dist[j] = cur, pre[j] = j0;) s
+5 366 M
+(                                if \(dist[j] < delta\) delta = dist[j], j1 = j;) s
+5 357 M
+(                        }) s
+5 348 M
+(                        forn\(j, 0, m\) {) s
+5 339 M
+(                                if \(done[j]\) u[p[j]] += delta, v[j] -= delta;) s
+5 330 M
+(                                else dist[j] -= delta;) s
+5 321 M
+(                        }) s
+5 312 M
+(                        j0 = j1;) s
+5 303 M
+(                } while \(p[j0]\);) s
+5 294 M
+(                while \(j0\) { // update alternating path) s
+5 285 M
+(                        ll j1 = pre[j0];) s
+5 276 M
+(                        p[j0] = p[j1], j0 = j1;) s
+5 267 M
+(                }) s
+5 258 M
+(        }) s
+5 249 M
+(        forn\(j, 1, m\) if \(p[j]\) ans[p[j] - 1] = j - 1;) s
+5 240 M
+(        return {-v[0], ans}; // min cost) s
+5 231 M
+(}) s
+5 213 M
+( ) s
+5 204 M
+(int main\(\){) s
+5 195 M
+(    _;) s
+5 186 M
+(    ll n; cin >> n;) s
+5 177 M
+(    vector<vll> a\(n, vll\(n\)\);) s
+5 168 M
+( ) s
+5 159 M
+(    forn\(i,0,n\)) s
+5 150 M
+(    forn\(j,0,n\)) s
+5 141 M
+(        cin >> a[i][j];) s
+5 132 M
+( ) s
+5 123 M
+(    auto [val, ans] = hungarian\(a\);) s
+5 114 M
+( ) s
+5 105 M
+(    cout << val << ln;) s
+5 96 M
+(    forn\(i,0,n\){) s
+5 87 M
+(        cout << i+1 << " " << ans[i]+1 << ln;) s
+5 78 M
+(    }) s
+5 69 M
+(    return 0;) s
+5 60 M
+(}) s
+_R
+S
+%%Trailer
+%%Pages: 5
+%%DocumentNeededResources: font Courier-Bold Courier 
+%%EOF

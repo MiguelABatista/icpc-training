@@ -1,0 +1,51 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef long long ll;
+typedef pair<ll, ll> pll;
+typedef vector<ll> vll;
+
+#define forn(i, s, e) for (ll i = (s); i < (e); i++)
+#define sz(u) ((ll) u.size())
+#define ln "\n"
+
+#ifdef DEBUG
+#define trace(u) u
+#define _
+#else
+#define trace(u)
+#define _ ios::sync_with_stdio(0); cin.tie(0)
+#endif
+
+#define debug(u) trace(cout << #u " = " << u << ln)
+#define debugv(v) trace(cout << #v ": "; for (auto xx : v) cout << xx << " "; cout << ln)
+
+const ll INF = 0x3f3f3f3f3f3f3f3fll;
+
+void solve(){
+    ll n; cin >> n;
+    string s; cin >> s;
+    reverse(s.begin(), s.end());
+    ll p = 0;
+    string resp;
+    while(p < sz(s)){
+        if(s[p] == '0'){
+            ll x = s[p+1] - '0' + 10*(s[p+2]-'0');
+            resp.push_back('a'+x-1);
+            p+=3;
+            continue;
+        }
+        ll x = s[p]-'0';
+        resp.push_back('a' + x-1);
+        p++;
+    }
+    reverse(resp.begin(), resp.end());
+    cout << resp << ln;
+}
+
+int main() {
+    _;
+    ll t; cin >> t;
+    while(t--) solve();
+    return 0;
+}
