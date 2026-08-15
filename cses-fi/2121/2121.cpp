@@ -1,0 +1,179 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef long long ll;
+typedef pair<ll, ll> pll;
+typedef vector<ll> vll;
+
+#define forn(i, s, e) for (ll i = (s); i < (e); i++)
+#define sz(u) ((ll) u.size())
+#define ln "\n"
+
+#ifdef DEBUG
+#define trace(u) u
+#define _
+#else
+#define trace(u)
+#define _ ios::sync_with_stdio(0); cin.tie(0)
+#endif
+
+#define debug(u) trace(cout << #u " = " << u << ln)
+#define debugv(v) trace(cout << #v ": "; for (auto xx : v) cout << xx << " "; cout << ln)
+
+const ll INF = 0x3f3f3f3f3f3f3f3fll;
+
+// Min Cost Max Flow (MCMF)
+//
+// min_cost_flow(s, t, f) computes the pair (flow, cost) where max(flow) <= f with min(cost).
+// min_cost_flow(s, t) -> Maximum flow with minimum cost from s to t.
+// For DAGs, SPFA can be replaced with DP to avoid O(nm) initial cost.
+// If no negative cost edges exist, SPFA is not needed.
+//
+// complexity: O(nm + f * m log n), O(n + m)
+
+template<typename T> struct mcmf {
+    struct edge {
+        ll to, rev, flow, cap; // destination, reverse edge id, current flow, capacity
+        bool res; // is reverse edge
+        T cost; // cost per unit of flow
+        edge() : to(0), rev(0), flow(0), cap(0), cost(0), res(false) {}
+        edge(ll to_, ll rev_, ll flow_, ll cap_, T cost_, bool res_)
+            : to(to_), rev(rev_), flow(flow_), cap(cap_), res(res_), cost(cost_) {}
+    };
+
+    vector<vector<edge>> g;
+    vll par_idx, par;
+    T inf;
+    vector<T> dist;
+
+    mcmf(ll n) : g(n), par_idx(n), par(n), inf(numeric_limits<T>::max()/3) {}
+
+    void add(ll u, ll v, ll w, T cost) { // edge from u to v with capacity w and cost
+        edge a = edge(v, sz(g[v]), 0, w, cost, false);
+        edge b = edge(u, sz(g[u]), 0, 0, -cost, true);
+
+        g[u].push_back(a);
+        g[v].push_back(b);
+    }
+
+    vector<T> spfa(ll s) { // not needed if no negative cost edges
+        deque<ll> q;
+        vector<bool> is_inside(sz(g), 0);
+        dist = vector<T>(sz(g), inf);
+
+        dist[s] = 0;
+        q.push_back(s);
+        is_inside[s] = true;
+
+        while (!q.empty()) {
+            ll v = q.front();
+            q.pop_front();
+            is_inside[v] = false;
+
+            forn(i,0,sz(g[v])){
+                auto [to, rev, flow, cap, res, cost] = g[v][i];
+                if (flow < cap && dist[v] + cost < dist[to]) {
+                    dist[to] = dist[v] + cost;
+
+                    if (is_inside[to]) continue;
+                    if (!q.empty() && dist[to] > dist[q.front()]) q.push_back(to);
+                    else q.push_front(to);
+                    is_inside[to] = true;
+                }
+            }
+        }
+        return dist;
+    }
+    bool dijkstra(ll s, ll t, vector<T>& pot) {
+        priority_queue<pair<T, ll>, vector<pair<T, ll>>, greater<>> q;
+        dist = vector<T>(sz(g), inf);
+        dist[s] = 0;
+        q.emplace(0, s);
+        while (sz(q)) {
+            auto [d, v] = q.top();
+            q.pop();
+            if (dist[v] < d) continue;
+            forn(i,0,sz(g[v])) {
+                auto [to, rev, flow, cap, res, cost] = g[v][i];
+                cost += pot[v] - pot[to];
+                if (flow < cap && dist[v] + cost < dist[to]) {
+                    dist[to] = dist[v] + cost;
+                    q.emplace(dist[to], to);
+                    par_idx[to] = i, par[to] = v;
+                }
+            }
+        }
+        return dist[t] < inf;
+    }
+
+    pair<ll, T> min_cost_flow(ll s, ll t, ll flow = INF) {
+        vector<T> pot(sz(g), 0);
+        pot = spfa(s); // change shortest path algorithm here
+        // no negative costs: nothing needed
+        // DAG: use DP instead
+        ll f = 0;
+        T ret = 0;
+        while (f < flow && dijkstra(s, t, pot)) {
+            forn(i,0,sz(g))
+                if (dist[i] < inf) pot[i] += dist[i];
+
+            ll mn_flow = flow - f, u = t;
+            while (u != s){
+                mn_flow = min(mn_flow,
+                    g[par[u]][par_idx[u]].cap - g[par[u]][par_idx[u]].flow);
+                u = par[u];
+            }
+
+            ret += pot[t] * mn_flow;
+
+            u = t;
+            while (u != s) {
+                g[par[u]][par_idx[u]].flow += mn_flow;
+                g[u][g[par[u]][par_idx[u]].rev].flow -= mn_flow;
+                u = par[u];
+            }
+
+            f += mn_flow;
+        }
+
+        return make_pair(f, ret);
+    }
+
+    // Optional: returns original edges where flow == cap
+    vector<pll> recover() {
+        vector<pll> used;
+        forn(i, 0, sz(g)) for (edge e : g[i])
+            if(e.flow == e.cap && !e.res) used.push_back({i, e.to});
+        return used;
+    }
+};
+
+
+int main() {
+    _;
+    ll n, m, k; cin >> n >> m >> k;
+
+    mcmf<ll> flow(n+2);
+    ll source = n;
+    ll tink = n+1;
+
+    forn(i,0,m){
+        ll a, b, r, c;
+        cin >> a >> b >> r >> c;
+        a--, b--;
+        flow.add(a,b,r,c);
+    }
+
+    flow.add(source, 0, k, 0);
+    flow.add(n-1, tink, k, 0);
+    
+    auto [f, c] = flow.min_cost_flow(source, tink);
+    debug(f);
+    debug(c);
+    if(f < k){
+        cout << -1 << ln;
+        return 0;
+    }
+
+    cout << c << ln;
+}

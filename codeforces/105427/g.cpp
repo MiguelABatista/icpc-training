@@ -22,15 +22,20 @@ typedef vector<ll> vll;
 
 const ll INF = 0x3f3f3f3f3f3f3f3fll;
 
-void solve(){
-    ll n; cin >> n;
-    vll vec(n);
-    forn(i,0,n) cin >> vec[i];
-}
 
 int main() {
     _;
-    ll t; cin >> t;
-    while(t--) solve();
+    ll n, m; cin >> n >> m;
+    vector<vll> g(n);
+    forn(i,0,m){
+        ll a, b; cin >> a >> b;
+        a--, b--;
+        g[a].push_back(b);
+        g[b].push_back(a);
+    }
+
+    forn(i,0,n) if(sz(g[i]) <= 15){
+        
+    }
     return 0;
 }
